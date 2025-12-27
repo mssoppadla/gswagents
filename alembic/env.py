@@ -1,33 +1,30 @@
-# alembic/env.py
-import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy import create_engine
 from alembic import context
-
-from src.shared.app.db import Base
-from src.shared.app import models
+from sqlalchemy import engine_from_config, pool
+from logging.config import fileConfig
 
 # Alembic Config object
 config = context.config
 
-# Load DB URL from env
-POSTGRES_URL = os.getenv("POSTGRES_URL")
-config.set_main_option("sqlalchemy.url", POSTGRES_URL)
+# Interpret the config file for logging
+fileConfig(config.config_file_name)
 
-# Interpret logging config
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+# Read async URL from env
+async_url = os.getenv("POSTGRES_URL")
 
+# Replace asyncpg with psycopg2 for migrations
+sync_url = async_url.replace("asyncpg", "psycopg2")
+
+# Override sqlalchemy.url in Alembic config
+config.set_main_option("sqlalchemy.url", sync_url)
+
+# Import your models Base
+from src.shared.app.db import Base
 target_metadata = Base.metadata
 
 def run_migrations_offline():
     context.configure(
-        url=POSTGRES_URL,
+        url=sync_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -36,7 +33,11 @@ def run_migrations_offline():
         context.run_migrations()
 
 def run_migrations_online():
-    connectable = create_engine(POSTGRES_URL, poolclass=pool.NullPool)
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
