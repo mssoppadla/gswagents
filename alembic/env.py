@@ -1,7 +1,10 @@
 import os
+import sys
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Alembic Config object
 config = context.config
