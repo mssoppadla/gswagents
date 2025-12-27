@@ -137,3 +137,14 @@ def create_app():
         )
     
     return app
+from fastapi import FastAPI
+from src.api.routers import guest, chat
+
+app = FastAPI()
+
+app.include_router(guest.router, prefix="/guest", tags=["guest"])
+app.include_router(chat.router, prefix="/chat", tags=["chat"])
+
+@app.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
