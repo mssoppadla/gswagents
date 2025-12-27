@@ -16,7 +16,8 @@ from dotenv import load_dotenv
 from src import util
 ## or if you only need the function: from src.util import get_env_file_path
 
-from logging_config import configure_logging
+#from logging_config import configure_logging
+from src import logging_config
 
 enable_trace = False
 logger = None
