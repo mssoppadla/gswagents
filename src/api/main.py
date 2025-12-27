@@ -13,7 +13,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
-from util import get_env_file_path
+from src import util
+## or if you only need the function: from src.util import get_env_file_path
 
 from logging_config import configure_logging
 
