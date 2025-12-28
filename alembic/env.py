@@ -4,6 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Alembic Config object
@@ -22,7 +23,10 @@ sync_url = async_url.replace("asyncpg", "psycopg2")
 config.set_main_option("sqlalchemy.url", sync_url)
 
 # Import your models Base
-from src.shared.app.db import Base
+# from src.shared.app.db import Base
+# target_metadata = Base.metadata
+
+from src.db.models import Base
 target_metadata = Base.metadata
 
 def run_migrations_offline():
