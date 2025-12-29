@@ -1,7 +1,8 @@
+
 from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship
-
+from sqlalchemy import Column, String, Text
 Base = declarative_base()
 
 class Tenant(Base):
@@ -97,6 +98,14 @@ class Document(Base):
     title = Column(String(255))
     content = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
+
+    # NEW: source metadata (add these)
+    source_type = Column(String(50), nullable=True)       # google_doc | google_sheet | url | file
+    source_url = Column(String(1024), nullable=True)      # original link
+    external_id = Column(String(255), nullable=True)      # Google file ID, etc.
+    mime_type = Column(String(255), nullable=True)
+    ingest_status = Column(String(50), nullable=True)     # pending | succeeded | failed
+    ingest_error = Column(Text, nullable=True)
 
     organization = relationship("Organization", back_populates="documents")
     knowledge_base = relationship("KnowledgeBase", back_populates="documents")

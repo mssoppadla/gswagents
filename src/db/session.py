@@ -12,6 +12,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set")
 
+engine = create_async_engine(DATABASE_URL, echo=False, future=True) 
+async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 # -------------------------------------------------------------------
 # Configure SSL for Azure PostgreSQL
 # asyncpg does not support ?sslmode=require, so we pass an SSL context
