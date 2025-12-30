@@ -33,6 +33,9 @@ app.include_router(org.router, prefix="/org", tags=["org"])
 app.include_router(sources.router, prefix="/sources", tags=["sources"])
 app.include_router(widget.router, prefix="/widget", tags=["widget"])
 app.include_router(onboarding.router) # Prefix handled in router file
+@app.get("/") 
+async def root(): 
+    return RedirectResponse(url="/login")
 
 @app.get("/login", response_class=HTMLResponse, tags=["auth"])
 async def login_page(request: Request):
