@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 # -------------------------------------------------------------------
 # Load DATABASE_URL from environment
 # Example:
-#   postgresql+asyncpg://zenai_user:Zpass01*786@xpgsqlagent.postgres.database.azure.com:5432/zenai_db
+#   postgresql+asyncpg://zenai_user:Password@xpgsqlagent.postgres.database.azure.com:5432/zenai_db
 # -------------------------------------------------------------------
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:

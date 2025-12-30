@@ -1,5 +1,5 @@
 
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, String, Text
@@ -115,6 +115,7 @@ class GuestIdentity(Base):
     __tablename__ = "guest_identities"
     id = Column(Integer, primary_key=True, autoincrement=True)
     org_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
+    
     session_token = Column(String(255), unique=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
@@ -132,89 +133,3 @@ class ConfigTheme(Base):
 
     organization = relationship("Organization", back_populates="config_themes")
 
-
-
-
-
-# Old working as of 28th Dec 2025 2.20 pm
-# from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey
-# from sqlalchemy.sql import func
-# from sqlalchemy.orm import declarative_base, relationship
-
-# Base = declarative_base()
-
-# class Tenant(Base):
-#     __tablename__ = "tenants"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     slug = Column(String(255), nullable=False, unique=True)
-#     domain = Column(String(255))
-#     logo_url = Column(String(255))
-#     theme_color = Column(String(50))
-#     chat_logo_url = Column(String(255))
-#     welcome_message = Column(Text)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class Organization(Base):
-#     __tablename__ = "organizations"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     slug = Column(String(255), nullable=False, unique=True)
-#     name = Column(String(255), nullable=False)
-#     public_api_key_hash = Column(String(255), nullable=False)
-#     allowed_domain = Column(String(255))
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class Widget(Base):
-#     __tablename__ = "widgets"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     org_id = Column(Integer, ForeignKey("organizations.id"))
-#     position = Column(String(50))
-#     chat_logo_url = Column(String(255))
-#     welcome_message = Column(Text)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class User(Base):
-#     __tablename__ = "users"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     org_id = Column(Integer, ForeignKey("organizations.id"))
-#     email = Column(String(255), unique=True)
-#     hashed_password = Column(String(255))
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class Secret(Base):
-#     __tablename__ = "secrets"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     org_id = Column(Integer, ForeignKey("organizations.id"))
-#     key = Column(String(255), nullable=False)
-#     value = Column(Text, nullable=False)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class KnowledgeBase(Base):
-#     __tablename__ = "knowledge_bases"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     org_id = Column(Integer, ForeignKey("organizations.id"))
-#     name = Column(String(255), nullable=False)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class Document(Base):
-#     __tablename__ = "documents"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     kb_id = Column(Integer, ForeignKey("knowledge_bases.id"))
-#     title = Column(String(255))
-#     content = Column(Text)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class GuestIdentity(Base):
-#     __tablename__ = "guest_identities"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     tenant_id = Column(Integer, ForeignKey("tenants.id"))
-#     session_token = Column(String(255), unique=True)
-#     created_at = Column(TIMESTAMP, server_default=func.now())
-
-# class ConfigTheme(Base):
-#     __tablename__ = "config_themes"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     org_id = Column(Integer, ForeignKey("organizations.id"))
-#     theme_name = Column(String(255))
-#     primary_color = Column(String(50))
-#     secondary_color = Column(String(50))
-#     created_at = Column(TIMESTAMP, server_default=func.now())

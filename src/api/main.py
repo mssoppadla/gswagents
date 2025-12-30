@@ -1,13 +1,15 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
+#src/api/main.py
 
 import os
 import contextlib
 import fastapi
-from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
 from agent_framework import ChatAgent

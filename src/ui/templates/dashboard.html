@@ -1,8 +1,20 @@
+
 <!DOCTYPE html>
 <html>
 <head><title>Dashboard</title></head>
 <body>
     <h1>Welcome to the Dashboard</h1>
     <p>Viewing data for Tenant ID: {{ tenant_id }}</p>
+
+    <h2>Embed Chat Widget</h2>
+    <pre>
+        <iframe 
+            src="http://127.0.0.1:8000/chat/history?tenant_id={{ tenant_id }}"
+            width="400" 
+            height="600" 
+            style="border:none;">
+        </iframe>
+    </pre>
+
 </body>
 </html>
