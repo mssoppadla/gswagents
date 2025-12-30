@@ -4,19 +4,152 @@
   <meta charset="UTF-8">
   <title>Tenant Chat Widget</title>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Outer container fills iframe */
+    #chat-widget {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    /* Chat history expands to fill available space */
+    #chatbox {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    /* Input + Send button pinned at bottom */
+    #controls {
+      display: flex;
+      padding: 5px;
+      border-top: 1px solid #ddd;
+    }
+
+    #input {
+      flex: 1;
+      margin-right: 5px;
+    }
+
+    #send {
+      width: 80px;
+    }
+
+    .user {
+      color: blue;
+      margin: 5px 0;
+    }
+
+    .agent {
+      color: green;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-widget">
+    <div id="chatbox"></div>
+    <div id="controls">
+      <input id="input" type="text" placeholder="Type a message..."/>
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <!-- ✅ Load tenant‑aware JS -->
+  <script src="/static/widget.js" defer></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+<!--#######################################
+<!-- <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tenant Chat Widget</title>
+  <style>
     body { font-family: Arial, sans-serif; margin: 0; }
-    #chatbox { border: 1px solid #ccc; width: 100%; height: 500px; overflow-y: auto; padding: 10px; }
-    #input { width: 80%; }
-    #send { width: 18%; }
+
+    #chat-widget {
+      width: 400px;   /* adjust for square/rectangle */
+      height: 500px;  /* adjust for square/rectangle */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #chatbox {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    #controls {
+      display: flex;
+      padding: 5px;
+      border-top: 1px solid #ddd;
+    }
+
+    #input { flex: 1; margin-right: 5px; }
+    #send { width: 80px; }
+
     .user { color: blue; margin: 5px 0; }
     .agent { color: green; margin: 5px 0; }
   </style>
 </head>
+
+<!-- <head>
+  <meta charset="UTF-8">
+  <title>Tenant Chat Widget</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; }
+    #chatbox { border: 1px solid #ccc; width: 100%; height: 500px; overflow-y: auto; padding: 10px; }
+    #input { width: 70%; }
+    #send { width: 18%; }
+    .user { color: blue; margin: 5px 0; }
+    .agent { color: green; margin: 5px 0; }
+  </style>
+</head> -->
 <body>
+  <!-- ✅ Wrap everything in a container -->
+  <div id="chat-widget">
+    <div id="chatbox"></div>
+    <div id="controls">
+      <input id="input" type="text" placeholder="Type a message..."/>
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <!-- ✅ Load tenant‑aware JS -->
+  <script src="/static/widget.js" defer></script>
+</body>
+
+<!-- <body>
   <div id="chatbox"></div>
   <input id="input" type="text" placeholder="Type a message..."/>
   <button id="send">Send</button>
   <!-- ✅ Load tenant‑aware JS -->
   <script src="/static/widget.js"></script>
-</body>
-</html>
+</body> -->
+</html> -->
