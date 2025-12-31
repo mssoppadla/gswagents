@@ -40,9 +40,9 @@ async def lifespan(app: fastapi.FastAPI):
     if not agent_id:
         raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set (e.g., 'Agent396:2025-08-07').")
 
-    # Determine credential type based on environment variables for local vs production
-    if os.environ.get("AZURE_CONTAINER_APPS_REVISION_NAME"):
-        # Use Managed Identity in Azure Container Apps
+# Determine credential type based on environment variable
+    if os.environ.get("APP_ENV") == "PROD":
+        # Use Managed Identity/DefaultAzureCredential in Azure Container Apps
         credential = DefaultAzureCredential()
     else:
         # Fallback to CLI credential for local development
@@ -62,6 +62,29 @@ async def lifespan(app: fastapi.FastAPI):
         logger.info(f"Bound ChatAgent to Azure AI Foundry agent {agent_id}")
         app.state.agent = agent_instance
         yield
+
+    # # Determine credential type based on environment variables for local vs production
+    # if os.environ.get("AZURE_CONTAINER_APPS_REVISION_NAME"):
+    #     # Use Managed Identity in Azure Container Apps
+    #     credential = DefaultAzureCredential()
+    # else:
+    #     # Fallback to CLI credential for local development
+    #     credential = AzureCliCredential()
+
+    # # Use the selected credential with the async context manager
+    # async with (
+    #     credential as cred_instance,
+    #     ChatAgent(
+    #         chat_client=AzureAIAgentClient(
+    #             project_endpoint=proj_endpoint,
+    #             agent_id=agent_id,
+    #             async_credential=cred_instance,
+    #         )
+    #     ) as agent_instance
+    # ):
+    #     logger.info(f"Bound ChatAgent to Azure AI Foundry agent {agent_id}")
+    #     app.state.agent = agent_instance
+    #     yield
 
 # Create FastAPI app
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
