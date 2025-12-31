@@ -39,21 +39,20 @@ async def lifespan(app: fastapi.FastAPI):
 
     # Choose credential type
     if os.environ.get("APP_ENV") == "PROD":
-        credential_cls = DefaultAzureCredential
+        credential = DefaultAzureCredential()
     else:
-        credential_cls = AzureCliCredential
+        credential = AzureCliCredential()
 
-    # Proper async usage of credential
-    async with credential_cls() as cred_instance:
-        async with ChatAgent(
-            chat_client=AzureAIAgentClient(
-                project_endpoint=proj_endpoint,
-                agent_id=agent_id,
-                async_credential=cred_instance,
-            )
-        ) as agent_instance:
-            app.state.agent = agent_instance
-            yield
+    # Use the credential directly
+    async with ChatAgent(
+        chat_client=AzureAIAgentClient(
+            project_endpoint=proj_endpoint,
+            agent_id=agent_id,
+            credential=credential,   # ✅ correct keyword
+        )
+    ) as agent_instance:
+        app.state.agent = agent_instance
+        yield
 
 # @contextlib.asynccontextmanager
 # async def lifespan(app: fastapi.FastAPI):
