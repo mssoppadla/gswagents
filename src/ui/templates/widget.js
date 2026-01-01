@@ -33,12 +33,21 @@ sendBtn.onclick = async () => {
     agentDiv.className = "agent";
     chatbox.appendChild(agentDiv);
 
-    try {
-        const response = await fetch("/chat/query/stream", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ session_token: sessionToken, message })
-        });
+    const API_BASE = "https://chat.zenai.co.in";
+
+    const response = await fetch(`${API_BASE}/chat/query/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_token: sessionToken, message })
+    });
+
+    // above things are hard coded to call backend instead or we can configure it, or configure ui proxy to send requests to backend
+    // try {
+    //     const response = await fetch("/chat/query/stream", {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify({ session_token: sessionToken, message })
+    //     });
 
         if (!response.ok || !response.body) {
             agentDiv.textContent = "Agent: [Error: " + response.status + "]";
@@ -47,7 +56,7 @@ sendBtn.onclick = async () => {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
-        
+
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
