@@ -10,9 +10,9 @@ from src.db.models import Tenant, Organization as Org, User, Secret
 from dotenv import load_dotenv 
 import hashlib, secrets
 from cryptography.fernet import Fernet   # 👈 added for encryption
-
+import logging
 load_dotenv()
-
+logger = logging.getLogger(__name__) 
 # prefix="/auth/google", removed this parameter inside the APIRouter() to match main.py
 router = APIRouter(tags=["auth"])
 
@@ -53,8 +53,25 @@ async def exchange_code_for_tokens(code: str):
             "redirect_uri": GOOGLE_REDIRECT_URI,
             "grant_type": "authorization_code",
         })
-    resp.raise_for_status()
+    try:
+        resp.raise_for_status()
+    except Exception:
+        print("[DEBUG] inside exchange tokens code for tokens definition- Google token response:", resp.text)
+        raise
     return resp.json()
+
+# async def exchange_code_for_tokens(code: str):
+#     token_url = "https://oauth2.googleapis.com/token"
+#     async with httpx.AsyncClient() as client:
+#         resp = await client.post(token_url, data={
+#             "code": code,
+#             "client_id": GOOGLE_CLIENT_ID,
+#             "client_secret": GOOGLE_CLIENT_SECRET,
+#             "redirect_uri": GOOGLE_REDIRECT_URI,
+#             "grant_type": "authorization_code",
+#         })
+#     resp.raise_for_status()
+#     return resp.json()
 
 @router.get("/google/login")
 async def google_login():
@@ -75,12 +92,30 @@ async def google_login():
     print("[DEBUG]: GOOGLE_REDIRECT_URI from variables:", GOOGLE_REDIRECT_URI)
     return RedirectResponse(url=url)
 
-@router.get("/google/callback")
+@router.get("/auth/google/callback")
 async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
     print ("[DEBUG]: Inside google_callback()/auth/google/callback")
+    logger.debug("Inside google_callback from logger()")
     
-    tokens = await exchange_code_for_tokens(code)
-    user_info = decode_id_token(tokens["id_token"])
+    try:
+        print ("[DEBUG]: tocken excchange is called ")
+        logger.debug("kicking off  tocken exchange")
+        tokens = await exchange_code_for_tokens(code)
+        user_info = decode_id_token(tokens["id_token"])
+        print("[DEBUG]: Tokens received:", tokens)
+        print("[DEBUG]:decoded token:", user_info)
+    except Exception as e:
+        logger.error(f"Token exchange failed: {e}")
+        return RedirectResponse(url="/error?reason=oauth_failed")
+
+    id_token = tokens.get("id_token")
+    if not id_token:
+        logger.error("No id_token in Google response: %s", tokens)
+        return RedirectResponse(url="/error?reason=no_id_token")
+    user_info = decode_id_token(id_token)
+
+
+    #user_info = decode_id_token(tokens["id_token"])
     email, name = user_info["email"], user_info.get("name")
 
     # Tenant
