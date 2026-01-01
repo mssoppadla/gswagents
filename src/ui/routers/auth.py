@@ -107,9 +107,33 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
     try:
         print ("[DEBUG]: tocken excchange is called ")
         logger.debug("kicking off  tocken exchange")
+        # tokens = await exchange_code_for_tokens(code)
+        # user_info = decode_id_token(tokens["id_token"])
+        # print("[DEBUG]: Tokens received:", tokens)
+ 
         tokens = await exchange_code_for_tokens(code)
-        user_info = decode_id_token(tokens["id_token"])
-        print("[DEBUG]: Tokens received:", tokens)
+        id_token = tokens.get("id_token")
+
+        # Decode ID token (basic claims)
+        user_info = decode_id_token(id_token)
+
+        # Fetch full profile from Google userinfo endpoint
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                "https://openidconnect.googleapis.com/v1/userinfo",
+                headers={"Authorization": f"Bearer {tokens['access_token']}"}
+            )
+            resp.raise_for_status()
+            profile = resp.json()
+
+        # Merge claims
+        email = profile.get("email") or user_info.get("email")
+        name = profile.get("name") or user_info.get("name")
+
+        if not email:
+            logger.error("No email found in Google response")
+            return RedirectResponse(url="/error?reason=no_email")
+
         print("[DEBUG]:decoded token:", user_info)
     except Exception as e:
         logger.error(f"Token exchange failed: {e}")
