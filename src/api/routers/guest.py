@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta
 import uuid
+import logging 
 
 from src.db.session import get_session
 from src.db.models import GuestIdentity
@@ -16,6 +17,7 @@ async def create_guest_session(org_id: int, session: AsyncSession = Depends(get_
     Returns a unique session token and expiry.
     """
     # Generate a unique token
+    logging.info(f"inside the router.post in guest.py ")
     token = str(uuid.uuid4())
     expires_in = 3600  # seconds (1 hour)
 
