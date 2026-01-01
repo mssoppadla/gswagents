@@ -12,9 +12,10 @@ import hashlib, secrets
 from cryptography.fernet import Fernet   # 👈 added for encryption
 import logging
 load_dotenv()
-logger = logging.getLogger(__name__) 
+ 
 # prefix="/auth/google", removed this parameter inside the APIRouter() to match main.py
 router = APIRouter(tags=["auth"])
+logger = logging.getLogger(__name__)
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -90,9 +91,15 @@ async def google_login():
     print("[DEBUG2.0.6]: end of Google OAuth LOGIN AND URL is:", url)
     print("Debug: GOOGLE_CLIENT_ID from variables:", GOOGLE_CLIENT_ID)
     print("[DEBUG]: GOOGLE_REDIRECT_URI from variables:", GOOGLE_REDIRECT_URI)
-    return RedirectResponse(url=url)
+    response = RedirectResponse(url=url)
+    print("[DEBUG] Response headers:", response.headers)
+    print("[DEBUG] Response status:", response.status_code)
+    print("[DEBUG] Response location:", response.headers.get("location"))
+    logger.debug("from logger RedirectResponse created with location=%s status=%s", response.headers.get("location"), response.status_code)
+    return response
 
-@router.get("/auth/google/callback")
+
+@router.get("/google/callback")
 async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
     print ("[DEBUG]: Inside google_callback()/auth/google/callback")
     logger.debug("Inside google_callback from logger()")
