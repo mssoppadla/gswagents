@@ -21,7 +21,7 @@ templates = Jinja2Templates(directory=templates_dir)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://app.zenai.co.in"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
