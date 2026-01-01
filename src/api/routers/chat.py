@@ -35,8 +35,9 @@ async def chat_query_stream(
     # Validate session
     result = await session.execute(
         select(GuestIdentity).where(GuestIdentity.session_token == payload.session_token)
-        logging.info(f"inside the router.post in chat.py query stream session validation check")
+        
     )
+    logging.info(f"inside the router.post in chat.py query stream session validation check")
     guest = result.scalar_one_or_none()
     if not guest:
         raise HTTPException(status_code=404, detail="Session not found")
