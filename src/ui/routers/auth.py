@@ -64,13 +64,13 @@ async def google_login():
         f"?client_id={GOOGLE_CLIENT_ID}"
         f"&redirect_uri={GOOGLE_REDIRECT_URI}"
         f"&response_type=code"
-        #f"&access_type=offline
-        f"&scope=openid email profile"
+        f"&access_type=offline"
+        f"&scope=openid email"
         
     )
     #f"&access_type=offline&prompt=consent" removed from the above
     #https://www.googleapis.com/auth/documents.readonly
-    print("[DEBUG]: end of Google OAuth LOGIN AND URL is:", url)
+    print("[DEBUG2.0.6]: end of Google OAuth LOGIN AND URL is:", url)
     print("Debug: GOOGLE_CLIENT_ID from variables:", GOOGLE_CLIENT_ID)
     print("[DEBUG]: GOOGLE_REDIRECT_URI from variables:", GOOGLE_REDIRECT_URI)
     return RedirectResponse(url=url)
