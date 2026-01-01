@@ -83,7 +83,7 @@ async def google_login():
         f"&redirect_uri={GOOGLE_REDIRECT_URI}"
         f"&response_type=code"
         f"&access_type=offline"
-        f"&scope=openid email"
+        f"&scope=openid+email"
         
     )
     #f"&access_type=offline&prompt=consent" removed from the above
