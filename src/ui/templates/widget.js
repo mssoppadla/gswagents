@@ -1,11 +1,13 @@
 //src/ui/templates/widget.js
+import logging 
+
 const chatbox = document.getElementById("chatbox");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 
 // In production, inject this from tenant onboarding flow
 // For now, hardcode or fetch from /chat/session
-const sessionToken = "e26f0fa7-e228-4acb-8391-757caaa99c5f";
+const sessionToken = "f2c8b6f0-1234-4abc-9def-567890abcdef";
 
 
 
@@ -19,8 +21,9 @@ function appendMessage(text, cls) {
 
 sendBtn.onclick = async () => {
     const message = input.value.trim();
+    logging.info(f"logging inside sendBtn.onclick in widget.js with message: {message}")
     if (!message) return;
-
+    logging.info(f"message is present")
     appendMessage("You: " + message, "user");
     input.value = "";
 
@@ -44,7 +47,7 @@ sendBtn.onclick = async () => {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
-
+        
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
