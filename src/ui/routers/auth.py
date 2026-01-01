@@ -68,6 +68,7 @@ async def google_login():
         f"&access_type=offline&prompt=consent"
     )
     print("[DEBUG]: end of Google OAuth LOGIN AND URL is:", url)
+    print("Debug: GOOGLE_CLIENT_ID from variables:", GOOGLE_CLIENT_ID)
     return RedirectResponse(url=url)
 
 @router.get("/google/callback")
