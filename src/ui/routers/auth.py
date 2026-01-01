@@ -19,6 +19,10 @@ router = APIRouter(tags=["auth"])
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+print("[DEBUG]: Entered into Auth.py")
+print("Debug: GOOGLE_CLIENT_ID:", GOOGLE_CLIENT_ID)
+print("Debug: GOOGLE_REDIRECT_URI:", GOOGLE_REDIRECT_URI)
+print("Debug: GOOGLE_CLIENT_SECRET:", GOOGLE_CLIENT_SECRET)
 
 # Load Fernet key from environment (generate once and store securely)
 FERNET_KEY = os.getenv("FERNET_KEY")
@@ -54,6 +58,7 @@ async def exchange_code_for_tokens(code: str):
 
 @router.get("/google/login")
 async def google_login():
+    print ("[DEBUG]: Inside google_login()/auth/google/login")
     url = (
         "https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={GOOGLE_CLIENT_ID}"
@@ -62,11 +67,13 @@ async def google_login():
         f"&scope=openid email profile https://www.googleapis.com/auth/documents.readonly"
         f"&access_type=offline&prompt=consent"
     )
-    print("Google OAuth URL:", url)
+    print("[DEBUG]: end of Google OAuth LOGIN AND URL is:", url)
     return RedirectResponse(url=url)
 
 @router.get("/google/callback")
 async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
+    print ("[DEBUG]: Inside google_callback()/auth/google/callback")
+    
     tokens = await exchange_code_for_tokens(code)
     user_info = decode_id_token(tokens["id_token"])
     email, name = user_info["email"], user_info.get("name")
@@ -74,6 +81,7 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
     # Tenant
     tenant = await session.scalar(select(Tenant).where(Tenant.slug == email))
     if not tenant:
+        print("[DEBUG]: Tenant not found so Creating new tenant for email:")
         tenant = Tenant(
             slug=email,
             domain=email.split("@")[1],  # mandatory
