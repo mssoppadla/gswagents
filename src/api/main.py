@@ -35,7 +35,7 @@ from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient
 
 print("[DEBUG]: agent instance created successfully.")
-app = fastapi.FastAPI(title="Runtime Chat API")#, lifespan=lifespan
+app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
 logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
 load_dotenv(env_file)
