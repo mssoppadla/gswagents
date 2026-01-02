@@ -20,3 +20,4 @@ python-jose[cryptography]
 argon2-cffi
 workos
 python-multipart
+agent-framework
