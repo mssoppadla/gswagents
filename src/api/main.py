@@ -83,7 +83,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     # Close agent on shutdown
     await agent_instance.close()
-
+app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
 
 # @contextlib.asynccontextmanager
 # async def lifespan(app: fastapi.FastAPI):
