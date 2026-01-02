@@ -26,6 +26,9 @@ from src.api.routers import tenants, guest, chat, knowledge
 
 logger = None
 env_file = None
+logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
+env_file = get_env_file_path()
+load_dotenv(env_file)
 print("[DEBUG]: Entered into src/api/main.py")
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
@@ -60,9 +63,7 @@ async def lifespan(app: fastapi.FastAPI):
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
 
 # Logging and environment
-logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
-env_file = get_env_file_path()
-load_dotenv(env_file)
+
 
 # CORS for Swagger and frontends
 app.add_middleware(
