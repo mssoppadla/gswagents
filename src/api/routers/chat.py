@@ -42,10 +42,20 @@ async def chat_query_stream(
     if not guest:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Generator that yields agent tokens
+    # # Generator that yields agent tokens
+    # async def token_generator():
+    #     async for update in chat_agent.run_stream(payload.message):
+    #         yield f"data: {update.text}\n\n"
+
+# in token_generator for /query/stream
     async def token_generator():
-        async for update in chat_agent.run_stream(payload.message):
-            yield f"data: {update.text}\n\n"
+        try:
+            async for update in chat_agent.run_stream(payload.message):
+                yield f"data: {update.text}\n\n"
+        except Exception as e:
+            logging.error(f"Streaming failed: {e}")
+            yield f"data: {str(e)}\n\n"
+
 
     # SSE headers
     headers = {
@@ -72,5 +82,11 @@ async def chat_query(
         raise HTTPException(status_code=404, detail="Session not found")
 
     # ✅ Call the agent instead of echo
-    response = await chat_agent.run(payload.message)
+    try:
+        response = await chat_agent.run(payload.message)
+        return {"reply": response.text}
+    except Exception as e:
+        logging.error(f"Chat agent failed: {e}")
+        raise HTTPException(status_code=503, detail="Chat agent not available")
+
     return {"reply": response.text}
