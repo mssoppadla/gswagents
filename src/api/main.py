@@ -26,7 +26,7 @@ from src.api.routers import tenants, guest, chat, knowledge
 
 logger = None
 env_file = None
-
+print("[DEBUG]: Entered into src/api/main.py")
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
     proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
@@ -37,6 +37,8 @@ async def lifespan(app: fastapi.FastAPI):
     if not agent_id:
         raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
 
+    print("[DEBUG]: Agent ID and Project Endpoint fetched successfully." agent_id + " " + proj_endpoint)
+    
     # Choose credential type
     if os.environ.get("APP_ENV") == "PROD":
         credential = DefaultAzureCredential()
@@ -76,12 +78,18 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+print("[DEBUG]: routers defined from src/ui/main.py to tenants,guest, chat. knowledge.")
 # Routers
 app.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 app.include_router(guest.router, prefix="/guest", tags=["guest"])
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 
+print(f"[DEBUG]: Tentants router is." + str(tenants.router))
+print(f"[DEBUG]: Guest router is." + str(guest.router))
+print(f"[DEBUG]: Chat router is." + str(chat.router))
+print(f"[DEBUG]: Knowledge router is." + str(knowledge.router))
+      
 # Health check
 @app.get("/healthz", tags=["ops"])
 async def healthz():

@@ -8,7 +8,7 @@ class ConfigureWidgetRequest(BaseModel):
     position: str
     chat_logo_url: str
     welcome_message: str
-
+print("[DEBUG]: Entered into src/ui/routers/widget.py")
 @router.get("/embed-code")
 async def get_embed_code(org_slug: str, welcome_message: str = "Welcome to our chat!"):
     embed = f"""

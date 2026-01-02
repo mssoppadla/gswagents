@@ -26,7 +26,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+print("[DEBUG]: Entered into src/ui/main.py")
 # Routers
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(org.router, prefix="/org", tags=["org"])

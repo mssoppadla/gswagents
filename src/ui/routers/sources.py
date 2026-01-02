@@ -25,7 +25,7 @@ class GoogleSheetRequest(BaseModel):
 class GoogleDocRequest(BaseModel):
     org_id: int
     doc_url: str
-
+print("[DEBUG]: Entered into src/ui/routers/sources.py")
 @router.post("/add-secret")
 async def add_secret(payload: SecretRequest):
     return {"message": f"Secret {payload.key} added for org {payload.org_id}"}

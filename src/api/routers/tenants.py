@@ -16,6 +16,7 @@ async def onboard_tenant(payload: TenantCreate, session: AsyncSession = Depends(
         domain=payload.domain,
         created_at=datetime.utcnow(),
     )
+    logging.info(f"inside src/api/routers/tenants.py: onboarding tenant {payload.slug}")
     session.add(tenant)
     await session.commit()
     return {"tenant_id": tenant.id}
@@ -24,6 +25,7 @@ async def onboard_tenant(payload: TenantCreate, session: AsyncSession = Depends(
 async def update_tenant(tenant_id: int, payload: TenantUpdate, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
+    logging.info(f"inside src/api/routers/tenants.py: tenants path for tenant id {tenant_id}")
     if not tenant:
         return {"error": f"Tenant {tenant_id} not found"}
 
