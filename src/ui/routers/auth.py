@@ -149,9 +149,15 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         await session.flush()
 
     # Organization
+    # org = await session.scalar(
+    #     select(Org).where(Org.tenant_id == tenant.id, Org.slug == email)
+    # )
+    
     org = await session.scalar(
-        select(Org).where(Org.tenant_id == tenant.id, Org.slug == email)
+    select(Org).where((Org.tenant_id == tenant.id) & (Org.slug == email))
     )
+
+    
     if not org:
         raw_key = secrets.token_urlsafe(32)
         api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
