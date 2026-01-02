@@ -98,26 +98,24 @@ async def google_login():
     logger.debug("from logger RedirectResponse created with location=%s status=%s", response.headers.get("location"), response.status_code)
     return response
 
-
 @router.get("/google/callback")
 async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
-    print ("[DEBUG]: Inside google_callback()/auth/google/callback")
+    print("[DEBUG]: Inside google_callback()/auth/google/callback")
     logger.debug("Inside google_callback from logger()")
-    
+
     try:
-        print ("[DEBUG]: tocken excchange is called ")
-        logger.debug("kicking off  tocken exchange")
-        # tokens = await exchange_code_for_tokens(code)
-        # user_info = decode_id_token(tokens["id_token"])
-        # print("[DEBUG]: Tokens received:", tokens)
- 
+        print("[DEBUG]: token exchange is called")
         tokens = await exchange_code_for_tokens(code)
         id_token = tokens.get("id_token")
 
-        # Decode ID token (basic claims)
+        if not id_token:
+            logger.error("No id_token in Google response: %s", tokens)
+            return RedirectResponse(url="/error?reason=no_id_token")
+
+        # Decode ID token
         user_info = decode_id_token(id_token)
 
-        # Fetch full profile from Google userinfo endpoint
+        # Fetch full profile
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 "https://openidconnect.googleapis.com/v1/userinfo",
@@ -126,7 +124,6 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
             resp.raise_for_status()
             profile = resp.json()
 
-        # Merge claims
         email = profile.get("email") or user_info.get("email")
         name = profile.get("name") or user_info.get("name")
 
@@ -134,36 +131,29 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
             logger.error("No email found in Google response")
             return RedirectResponse(url="/error?reason=no_email")
 
-        print("[DEBUG]:decoded token:", user_info)
+        print("[DEBUG]: decoded token:", user_info)
+
     except Exception as e:
         logger.error(f"Token exchange failed: {e}")
         return RedirectResponse(url="/error?reason=oauth_failed")
 
-    id_token = tokens.get("id_token")
-    if not id_token:
-        logger.error("No id_token in Google response: %s", tokens)
-        return RedirectResponse(url="/error?reason=no_id_token")
-    user_info = decode_id_token(id_token)
-
-
-    #user_info = decode_id_token(tokens["id_token"])
-    email, name = user_info["email"], user_info.get("name")
-
     # Tenant
     tenant = await session.scalar(select(Tenant).where(Tenant.slug == email))
     if not tenant:
-        print("[DEBUG]: Tenant not found so Creating new tenant for email:")
+        print("[DEBUG]: Tenant not found, creating new tenant for email:", email)
         tenant = Tenant(
             slug=email,
-            domain=email.split("@")[1],  # mandatory
+            domain=email.split("@")[1],
         )
         session.add(tenant)
         await session.flush()
 
-    # Org
-    org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
+    # Organization
+    org = await session.scalar(
+        select(Org).where(Org.tenant_id == tenant.id, Org.slug == email)
+    )
     if not org:
-        raw_key = secrets.token_urlsafe(32)  # generate random API key
+        raw_key = secrets.token_urlsafe(32)
         api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
         org = Org(
             tenant_id=tenant.id,
@@ -175,7 +165,7 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         session.add(org)
         await session.flush()
 
-        # Store raw key securely in secrets
+        # Store raw key securely
         session.add(Secret(
             tenant_id=tenant.id,
             org_id=org.id,
@@ -190,9 +180,20 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         session.add(user)
         await session.flush()
 
-    # Google tokens in secrets
-    def add_secret(key, value):
-        if value:
+    # Secrets upsert
+    async def upsert_secret(key, value):
+        if not value:
+            return
+        existing = await session.scalar(
+            select(Secret).where(
+                Secret.tenant_id == tenant.id,
+                Secret.org_id == org.id,
+                Secret.key == key
+            )
+        )
+        if existing:
+            existing.value = encrypt(value)
+        else:
             session.add(Secret(
                 tenant_id=tenant.id,
                 org_id=org.id,
@@ -200,12 +201,123 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
                 value=encrypt(value),
             ))
 
-    add_secret("google_access_token", tokens.get("access_token"))
-    add_secret("google_refresh_token", tokens.get("refresh_token"))
-    add_secret("google_id_token", tokens.get("id_token"))
-    add_secret("google_scope", tokens.get("scope"))
-    add_secret("google_token_type", tokens.get("token_type"))
+    await upsert_secret("google_access_token", tokens.get("access_token"))
+    await upsert_secret("google_refresh_token", tokens.get("refresh_token"))
+    await upsert_secret("google_id_token", tokens.get("id_token"))
+    await upsert_secret("google_scope", tokens.get("scope"))
+    await upsert_secret("google_token_type", tokens.get("token_type"))
 
     await session.commit()
     return RedirectResponse(url=f"/onboarding/edit?tenant_id={tenant.id}&org_id={org.id}")
+
+
+# @router.get("/google/callback")
+# async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
+#     print ("[DEBUG]: Inside google_callback()/auth/google/callback")
+#     logger.debug("Inside google_callback from logger()")
+    
+#     try:
+#         print ("[DEBUG]: tocken excchange is called ")
+#         logger.debug("kicking off  tocken exchange")
+#         # tokens = await exchange_code_for_tokens(code)
+#         # user_info = decode_id_token(tokens["id_token"])
+#         # print("[DEBUG]: Tokens received:", tokens)
+ 
+#         tokens = await exchange_code_for_tokens(code)
+#         id_token = tokens.get("id_token")
+
+#         # Decode ID token (basic claims)
+#         user_info = decode_id_token(id_token)
+
+#         # Fetch full profile from Google userinfo endpoint
+#         async with httpx.AsyncClient() as client:
+#             resp = await client.get(
+#                 "https://openidconnect.googleapis.com/v1/userinfo",
+#                 headers={"Authorization": f"Bearer {tokens['access_token']}"}
+#             )
+#             resp.raise_for_status()
+#             profile = resp.json()
+
+#         # Merge claims
+#         email = profile.get("email") or user_info.get("email")
+#         name = profile.get("name") or user_info.get("name")
+
+#         if not email:
+#             logger.error("No email found in Google response")
+#             return RedirectResponse(url="/error?reason=no_email")
+
+#         print("[DEBUG]:decoded token:", user_info)
+#     except Exception as e:
+#         logger.error(f"Token exchange failed: {e}")
+#         return RedirectResponse(url="/error?reason=oauth_failed")
+
+#     id_token = tokens.get("id_token")
+#     if not id_token:
+#         logger.error("No id_token in Google response: %s", tokens)
+#         return RedirectResponse(url="/error?reason=no_id_token")
+#     user_info = decode_id_token(id_token)
+
+
+#     #user_info = decode_id_token(tokens["id_token"])
+#     email, name = user_info["email"], user_info.get("name")
+
+#     # Tenant
+#     tenant = await session.scalar(select(Tenant).where(Tenant.slug == email))
+#     if not tenant:
+#         print("[DEBUG]: Tenant not found so Creating new tenant for email:")
+#         tenant = Tenant(
+#             slug=email,
+#             domain=email.split("@")[1],  # mandatory
+#         )
+#         session.add(tenant)
+#         await session.flush()
+
+#     # Org
+#     org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
+#     if not org:
+#         raw_key = secrets.token_urlsafe(32)  # generate random API key
+#         api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+#         org = Org(
+#             tenant_id=tenant.id,
+#             slug=email,
+#             name=email,
+#             public_api_key_hash=api_key_hash,
+#             allowed_domain=email.split("@")[1]
+#         )
+#         session.add(org)
+#         await session.flush()
+
+#         # Store raw key securely in secrets
+#         session.add(Secret(
+#             tenant_id=tenant.id,
+#             org_id=org.id,
+#             key="public_api_key",
+#             value=encrypt(raw_key),
+#         ))
+
+#     # User
+#     user = await session.scalar(select(User).where(User.email == email))
+#     if not user:
+#         user = User(org_id=org.id, email=email, hashed_password=None)
+#         session.add(user)
+#         await session.flush()
+
+#     # Google tokens in secrets
+#     def add_secret(key, value):
+#         if value:
+#             session.add(Secret(
+#                 tenant_id=tenant.id,
+#                 org_id=org.id,
+#                 key=key,
+#                 value=encrypt(value),
+#             ))
+
+#     add_secret("google_access_token", tokens.get("access_token"))
+#     add_secret("google_refresh_token", tokens.get("refresh_token"))
+#     add_secret("google_id_token", tokens.get("id_token"))
+#     add_secret("google_scope", tokens.get("scope"))
+#     add_secret("google_token_type", tokens.get("token_type"))
+
+#     await session.commit()
+#     return RedirectResponse(url=f"/onboarding/edit?tenant_id={tenant.id}&org_id={org.id}")
 
