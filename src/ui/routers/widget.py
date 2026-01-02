@@ -12,7 +12,7 @@ class ConfigureWidgetRequest(BaseModel):
 @router.get("/embed-code")
 async def get_embed_code(org_slug: str, welcome_message: str = "Welcome to our chat!"):
     embed = f"""
-    <script src='https://chat.yourapp.com/embed.js?org={org_slug}'></script>
+    <script src='https://chat.zenai.co.in/embed.js?org={org_slug}'></script>
     <script>
       window.chatConfig = {{
         welcomeMessage: "{welcome_message}"

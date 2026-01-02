@@ -36,6 +36,7 @@ async def chat_query_stream(
     )
     guest = result.scalar_one_or_none()
     if not guest:
+        print("[ERROR]: Session not found for token:", payload.session_token)
         raise HTTPException(status_code=404, detail="Session not found")
 
     # Generator that yields agent tokens

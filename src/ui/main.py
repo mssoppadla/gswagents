@@ -67,7 +67,7 @@ app.mount("/static", StaticFiles(directory=templates_dir), name="static")
 async def proxy_query(request: Request):
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            "http://127.0.0.1:8000/chat/query",
+            "http://chat.zenai.co.in/chat/query",
             content=await request.body(),
             headers=request.headers
         )
@@ -85,7 +85,7 @@ async def proxy_query_stream(request: Request):
             logging.info("[UI proxy] Opening stream to backend /chat/query/stream")
             async with client.stream(
                 "POST",
-                "http://127.0.0.1:8000/chat/query/stream",
+                "http://chat.zenai.co.in/chat/query/stream", # "http://127.0.0.1:8000/chat/query/stream",
                 data=body,   # ✅ use data instead of content
                 headers=request.headers,
             ) as upstream:
@@ -96,4 +96,3 @@ async def proxy_query_stream(request: Request):
             logging.info("[UI proxy] Upstream stream closed")
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
-
