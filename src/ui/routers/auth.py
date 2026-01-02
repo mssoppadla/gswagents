@@ -148,14 +148,14 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         session.add(tenant)
         await session.flush()
 
-    Organization
-    org = await session.scalar(
-        select(Org).where(Org.tenant_id == tenant.id, Org.slug == email)
-    )
-    
+    # Organization
     # org = await session.scalar(
-    # select(Org).where((Org.tenant_id == tenant.id) & (Org.slug == email))
+    #     select(Org).where(Org.tenant_id == tenant.id, Org.slug == email)
     # )
+    
+    org = await session.scalar(
+    select(Org).where((Org.tenant_id == tenant.id) & (Org.slug == email))
+    )
 
     
     if not org:
