@@ -27,48 +27,15 @@ from src.api.routers import tenants, guest, chat, knowledge
 logger = None
 env_file = None
 print("[DEBUG]: Entered into src/api/main.py")
-@contextlib.asynccontextmanager
-async def lifespan(app: fastapi.FastAPI):
-    proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
-    agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID", "").strip()
-
-    if not proj_endpoint:
-        raise RuntimeError("AZURE_EXISTING_AIPROJECT_ENDPOINT must be set.")
-    if not agent_id:
-        raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
-
-    print("[DEBUG]: Agent ID and Project Endpoint fetched successfully.", agent_id + " " + proj_endpoint)
-    
-    # Choose credential type
-    if os.environ.get("APP_ENV") == "PROD":
-        credential = DefaultAzureCredential()
-        print("[DEBUG]: Using DefaultAzureCredential for PROD environment.")
-    else:
-        credential = AzureCliCredential()
-        print("[DEBUG]: Using AzureCliCredential for non-PROD environment.")
-
-    # ✅ Create agent once and keep it alive
-    agent_instance = ChatAgent(
-        chat_client=AzureAIAgentClient(
-            project_endpoint=proj_endpoint,
-            agent_id=agent_id,
-            credential=credential,
-        )
-    )
-    app.state.agent = agent_instance
-
-    # Yield control back to FastAPI (startup complete)
-    yield
-
-    # ✅ Close cleanly on shutdown
-    await agent_instance.close()
+from azure.identity.aio import ManagedIdentityCredential, AzureCliCredential
+import os
+import contextlib
+import fastapi
+from agent_framework import ChatAgent
+from agent_framework.azure import AzureAIAgentClient
 
 print("[DEBUG]: agent instance created successfully.")
-
-# Create FastAPI app
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
-
-# Logging and environment
 logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
 load_dotenv(env_file)
@@ -81,6 +48,86 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@contextlib.asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+    proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
+    agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID", "").strip()
+
+    if not proj_endpoint:
+        raise RuntimeError("AZURE_EXISTING_AIPROJECT_ENDPOINT must be set.")
+    if not agent_id:
+        raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
+
+    print("[DEBUG]: Agent ID and Project Endpoint fetched successfully.", agent_id + " " + proj_endpoint)
+
+    # Use managed identity in PROD; Azure CLI locally
+    app_env = os.environ.get("APP_ENV", "").strip().upper()
+    if app_env == "PROD":
+        credential = ManagedIdentityCredential()
+        print("[DEBUG]: Using ManagedIdentityCredential for PROD environment.")
+    else:
+        credential = AzureCliCredential()
+        print("[DEBUG]: Using AzureCliCredential for non-PROD environment.")
+
+    # Create agent once, keep alive for app lifetime
+    agent_instance = ChatAgent(
+        chat_client=AzureAIAgentClient(
+            project_endpoint=proj_endpoint,
+            agent_id=agent_id,
+            credential=credential,
+        )
+    )
+    app.state.agent = agent_instance
+
+    yield
+
+    # Close agent on shutdown
+    await agent_instance.close()
+
+
+# @contextlib.asynccontextmanager
+# async def lifespan(app: fastapi.FastAPI):
+#     proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
+#     agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID", "").strip()
+
+#     if not proj_endpoint:
+#         raise RuntimeError("AZURE_EXISTING_AIPROJECT_ENDPOINT must be set.")
+#     if not agent_id:
+#         raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
+
+#     print("[DEBUG]: Agent ID and Project Endpoint fetched successfully.", agent_id + " " + proj_endpoint)
+    
+#     # Choose credential type
+#     if os.environ.get("APP_ENV") == "PROD":
+#         credential = DefaultAzureCredential()
+#         print("[DEBUG]: Using DefaultAzureCredential for PROD environment.")
+#     else:
+#         credential = AzureCliCredential()
+#         print("[DEBUG]: Using AzureCliCredential for non-PROD environment.")
+
+#     # ✅ Create agent once and keep it alive
+#     agent_instance = ChatAgent(
+#         chat_client=AzureAIAgentClient(
+#             project_endpoint=proj_endpoint,
+#             agent_id=agent_id,
+#             credential=credential,
+#         )
+#     )
+#     app.state.agent = agent_instance
+
+#     # Yield control back to FastAPI (startup complete)
+#     yield
+
+#     # ✅ Close cleanly on shutdown
+#     await agent_instance.close()
+
+# print("[DEBUG]: agent instance created successfully.")
+
+# # Create FastAPI app
+# app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
+
+# Logging and environment
+
 
 
 # @contextlib.asynccontextmanager
