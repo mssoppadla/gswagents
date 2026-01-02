@@ -37,7 +37,7 @@ async def lifespan(app: fastapi.FastAPI):
     if not agent_id:
         raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
 
-    print("[DEBUG]: Agent ID and Project Endpoint fetched successfully." agent_id + " " + proj_endpoint)
+    print("[DEBUG]: Agent ID and Project Endpoint fetched successfully.", agent_id + " " + proj_endpoint)
     
     # Choose credential type
     if os.environ.get("APP_ENV") == "PROD":
