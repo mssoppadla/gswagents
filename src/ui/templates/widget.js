@@ -46,7 +46,7 @@ sendBtn.onclick = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ session_token: sessionToken, message })
         });
-        console.log("post response fetch but before calculation check`);
+        console.log("post response fetch but before calculation check");
         if (!response.ok || !response.body) {
             agentDiv.textContent = "Agent: [Error: " + response.status + "]";
             return;
