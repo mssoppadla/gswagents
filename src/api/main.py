@@ -8,8 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from agent_framework import ChatAgent, ChatMessage
-from azure.ai.agents import Thread
-
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
@@ -43,19 +41,15 @@ async def lifespan(app: fastapi.FastAPI):
     async with ChatAgent(chat_client=chat_client) as agent_instance:
         app.state.agent = agent_instance
 
-        # Test call to verify agent responds (use Thread + ChatMessage)
-        test_thread = Thread(messages=[
-            ChatMessage(role="user", content="Hello, what can you do?")
-        ])
-        async for update in agent_instance.run_stream(test_thread):
+        # Startup test call
+        messages = [ChatMessage(role="user", content="Hello, what can you do?")]
+        async for update in agent_instance.run_stream(messages):
             logger.info(f"Agent test response: {update.text}")
 
         yield
 
+
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
-
-
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -79,15 +73,12 @@ app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 async def healthz():
     return {"status": "ok"}
 
-# Test endpoint
 @app.get("/test-agent", tags=["ops"])
 async def test_agent():
     agent_instance = app.state.agent
-    test_thread = Thread(messages=[
-        ChatMessage(role="user", content="which day is next years christmat fall on?")
-    ])
+    messages = [ChatMessage(role="user", content="Which day does next year's Christmas fall on?")]
     result = []
-    async for update in agent_instance.run_stream(test_thread):
+    async for update in agent_instance.run_stream(messages):
         result.append(update.text)
     return {"response": " ".join(result)}
 
