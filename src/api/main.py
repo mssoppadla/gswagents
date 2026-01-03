@@ -21,7 +21,7 @@ from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.agents import AgentsClient 
-
+from azure.identity import DefaultAzureCredential, AzureCliCredential
 
 logger = None
 env_file = None
@@ -51,14 +51,16 @@ async def lifespan(app: fastapi.FastAPI):
     if not agents:
         raise RuntimeError("No agents found in project. Please create one in Foundry.")
     agent_id = agents[0].id  # or filter by name/instructions if needed
-
+    logger.info(f"Using agent ID: {agent_id}")
+    logger.info(f"Project endpoint: {project_endpoint}")
+    
     # Create chat client (data plane)
     # chat_client = AzureAIAgentClient(
     #     project_endpoint=project_endpoint,
     #     agent_id=agent_id,
     #     credential=AzureKeyCredential(api_key)
     # )
-from azure.identity import DefaultAzureCredential, AzureCliCredential
+
 
     chat_client = AzureAIAgentClient(
         project_endpoint=project_endpoint,
