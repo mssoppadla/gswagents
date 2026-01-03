@@ -15,59 +15,49 @@ from dotenv import load_dotenv
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
-from azure.identity.aio import ManagedIdentityCredential
+
 from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
 
 logger = None
 env_file = None
+# Logging and environment
 logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
 load_dotenv(env_file)
-
-
-
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-    # 1. Load environment variables
     proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
     agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID", "").strip()
 
-    if not proj_endpoint or not agent_id:
-        raise RuntimeError("Required Azure Environment Variables (Endpoint/Agent ID) are missing.")
+    if not proj_endpoint:
+        raise RuntimeError("AZURE_EXISTING_AIPROJECT_ENDPOINT must be set.")
+    if not agent_id:
+        raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
 
-    # 2. Use DefaultAzureCredential (covers Local CLI, Managed Identity, and Workload Identity)
-    # This replaces the messy if/else and forced ManagedIdentity logic
-    credential = DefaultAzureCredential()
-    
-    logger.info(f"Starting lifespan with credential type: {type(credential).__name__}")
-    logger.info(f"credentials obtained successfully for agent binding are of type: {credential}")
-    try:
-        # 3. Initialize the ChatAgent
-        async with (
-            credential,
-            ChatAgent(
-                chat_client=AzureAIAgentClient(
-                    project_endpoint=proj_endpoint,
-                    agent_id=agent_id,
-                    async_credential=credential,
-                )
-            ) as agent_instance
-        ):
-            logger.info(f"Successfully bound ChatAgent to {agent_id}")
+    # Choose credential type
+    if os.environ.get("APP_ENV") == "PROD":
+        credential_cls = DefaultAzureCredential
+    else:
+        credential_cls = AzureCliCredential
+
+    # Proper async usage of credential
+    async with credential_cls() as cred_instance:
+        async with ChatAgent(
+            chat_client=AzureAIAgentClient(
+                project_endpoint=proj_endpoint,
+                agent_id=agent_id,
+                async_credential=cred_instance,
+            )
+        ) as agent_instance:
             app.state.agent = agent_instance
             yield
-    finally:
-        # Ensure credentials are closed properly
-        await credential.close()
-        logger.info("Lifespan shutdown: Credentials closed.")
-
 
 # Create FastAPI app
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
 
-# Logging and environment
+
 
 # CORS for Swagger and frontends
 app.add_middleware(
