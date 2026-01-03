@@ -1,3 +1,58 @@
+# #data Plane SDK chat integration with Azure AI Projects SDK
+
+# from azure.ai.agents import AgentsClient
+# from azure.identity import DefaultAzureCredential
+
+# agents_client = AgentsClient(
+#     endpoint="https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent",
+#     credential=DefaultAzureCredential()
+# )
+
+# agents = agents_client.list_agents()
+# print("number of Agents in the project are :" , len(list(agents)))
+
+# for agent in agents:
+#     print(agent.id, agent.name)
+
+
+
+ #control plane SDK:
+# # working just chat integration with Azure AI Projects SDK
+# from azure.identity import DefaultAzureCredential
+# from azure.ai.projects import AIProjectClient
+
+# myEndpoint = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
+
+# project_client = AIProjectClient(
+#     endpoint=myEndpoint,
+#     credential=DefaultAzureCredential(),
+# )
+
+# myAgent = "agent-template-assistant"
+# # Get an existing agent
+# agent = project_client.agents.get(agent_name=myAgent)
+# print(f"Retrieved agent: {agent.name}")
+# print(f"Retrieved id: {agent.id}")
+# openai_client = project_client.get_openai_client()
+
+# # Reference the agent to get a response
+# response = openai_client.responses.create(
+#     input=[{"role": "user", "content": "Tell me what you can help with."}],
+#     extra_body={"agent": {"name": agent.name, "type": "agent_reference"}},
+# )
+
+# print(f"Response output: {response.output_text}")
+
+
+
+
+
+
+
+
+
+
+
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license.
 # src/api/main.py
@@ -38,7 +93,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     chat_client = AzureAIAgentClient(
         project_endpoint=PROJECT_ENDPOINT,
-        agent_id=agent.id,
+        agent_id="asst_LdDoxHftok2KTvKi29JUjd6t",
         credential=DefaultAzureCredential()
     )
 
@@ -75,35 +130,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
-
-
-
-
-## working just chat integration with Azure AI Projects SDK
-# from azure.identity import DefaultAzureCredential
-# from azure.ai.projects import AIProjectClient
-
-# myEndpoint = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
-
-# project_client = AIProjectClient(
-#     endpoint=myEndpoint,
-#     credential=DefaultAzureCredential(),
-# )
-
-# myAgent = "agent-template-assistant"
-# # Get an existing agent
-# agent = project_client.agents.get(agent_name=myAgent)
-# print(f"Retrieved agent: {agent.name}")
-
-# openai_client = project_client.get_openai_client()
-
-# # Reference the agent to get a response
-# response = openai_client.responses.create(
-#     input=[{"role": "user", "content": "Tell me what you can help with."}],
-#     extra_body={"agent": {"name": agent.name, "type": "agent_reference"}},
-# )
-
-# print(f"Response output: {response.output_text}")
 
 
 
