@@ -34,7 +34,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     chat_client = AzureAIAgentClient(
         project_endpoint=PROJECT_ENDPOINT,
-        agent_id="asst_LdDoxHftok2KTvKi29JUjd6t",
+        agent_id="asst_aBXy1JLGC9d3CtKdX1fnOED4",
         credential=DefaultAzureCredential()
     )
     print(f"Chat client created successfully.{chat_client}")
