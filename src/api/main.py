@@ -21,7 +21,7 @@ env_file = get_env_file_path()
 load_dotenv(env_file)
 
 PROJECT_ENDPOINT = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
-AGENT_NAME = "asst-companion"
+#AGENT_NAME = "asst-companion"
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
@@ -29,15 +29,15 @@ async def lifespan(app: fastapi.FastAPI):
         endpoint=PROJECT_ENDPOINT,
         credential=DefaultAzureCredential(),
     )
-    agent = project_client.agents.get(agent_name=AGENT_NAME)
-    logger.info(f"Retrieved agent: {agent.name}")
+    # agent = project_client.agents.get(agent_name=AGENT_NAME)
+    # logger.info(f"Retrieved agent: {agent.name}")
 
     chat_client = AzureAIAgentClient(
         project_endpoint=PROJECT_ENDPOINT,
         agent_id="asst_LdDoxHftok2KTvKi29JUjd6t",
         credential=DefaultAzureCredential()
     )
-
+    print(f"Chat client created successfully.{chat_client}")
     async with ChatAgent(chat_client=chat_client) as agent_instance:
         app.state.agent = agent_instance
 
