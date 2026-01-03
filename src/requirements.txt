@@ -4,7 +4,7 @@ gunicorn==23.0.0
 azure-identity==1.19.0
 aiohttp==3.13.1
 openai
-azure_ai_projects==2.0.0b2
+azure-ai-projects==2.0.0b2
 azure-core==1.36.0  # other versions might not compatible
 azure-core-tracing-opentelemetry==1.0.0b12
 azure-monitor-opentelemetry-exporter==1.0.0b44
@@ -20,7 +20,6 @@ python-jose[cryptography]
 argon2-cffi
 workos
 python-multipart
-agent-framework 
-azure-ai-agents 
-azure-core 
-azure-identity
+agent-framework
+azure-ai-agents
+

@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient
-from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
-
+#from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, AzureCliCredential
 from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
@@ -35,7 +35,7 @@ load_dotenv(env_file)
 async def lifespan(app: fastapi.FastAPI):
     # Load from env
     project_endpoint = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"# os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
-    api_key =os.environ.get("AZURE_AI_API_KEY", "").strip()  
+    api_key =os.environ.get("AZURE_AI_API_KEY", "").strip()
 
 
     agents_client = AgentsClient(
@@ -53,10 +53,18 @@ async def lifespan(app: fastapi.FastAPI):
     agent_id = agents[0].id  # or filter by name/instructions if needed
 
     # Create chat client (data plane)
+    # chat_client = AzureAIAgentClient(
+    #     project_endpoint=project_endpoint,
+    #     agent_id=agent_id,
+    #     credential=AzureKeyCredential(api_key)
+    # )
+from azure.identity import DefaultAzureCredential, AzureCliCredential
+
     chat_client = AzureAIAgentClient(
         project_endpoint=project_endpoint,
         agent_id=agent_id,
-        credential=AzureKeyCredential(api_key)
+        credential=DefaultAzureCredential()   # works in container if MSI or env vars are set
+        # or AzureCliCredential() if you rely on CLI login locally
     )
 
     # Create ChatAgent
