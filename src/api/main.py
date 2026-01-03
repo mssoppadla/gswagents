@@ -20,7 +20,7 @@ from azure.ai.projects import AIProjectClient
 from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
-
+from agent_framework import ChatMessage
 logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
 load_dotenv(env_file)
@@ -47,9 +47,10 @@ async def lifespan(app: fastapi.FastAPI):
         app.state.agent = agent_instance
 
         # Test call to verify agent responds
-        async for update in agent_instance.run_stream([{"role": "user", "content": "Hello, what can you do?"}]):
+        async for update in agent_instance.run_stream(
+            [ChatMessage(role="user", content="Hello, what can you do?")] 
+        ):
             logger.info(f"Agent test response: {update.text}")
-
         yield
 
 
@@ -83,7 +84,7 @@ async def healthz():
 @app.get("/test-agent", tags=["ops"])
 async def test_agent():
     agent_instance = app.state.agent
-    messages = [{"role": "user", "content": "Hello, what can you do?"}]
+    messages = [ChatMessage(role="user", content="Hello, what can you do?")]
     result = []
     async for update in agent_instance.run_stream(messages):
         result.append(update.text)
