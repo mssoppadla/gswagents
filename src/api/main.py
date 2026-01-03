@@ -25,36 +25,33 @@ AGENT_NAME = "agent-template-assistant"
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-    try:
-        project_client = AIProjectClient(
-            endpoint=PROJECT_ENDPOINT,
-            credential=DefaultAzureCredential(),
-        )
-        agent = project_client.agents.get(agent_name=AGENT_NAME)
-        logger.info(f"Retrieved agent: {agent.name}")
+    project_client = AIProjectClient(
+        endpoint=PROJECT_ENDPOINT,
+        credential=DefaultAzureCredential(),
+    )
+    agent = project_client.agents.get(agent_name=AGENT_NAME)
+    logger.info(f"Retrieved agent: {agent.name}")
 
-        chat_client = AzureAIAgentClient(
-            project_endpoint=PROJECT_ENDPOINT,
-            agent_id="asst_LdDoxHftok2KTvKi29JUjd6t",
-            credential=DefaultAzureCredential()
-        )
+    chat_client = AzureAIAgentClient(
+        project_endpoint=PROJECT_ENDPOINT,
+        agent_id="asst_LdDoxHftok2KTvKi29JUjd6t",
+        credential=DefaultAzureCredential()
+    )
 
-        async with ChatAgent(chat_client=chat_client) as agent_instance:
-            app.state.agent = agent_instance
+    async with ChatAgent(chat_client=chat_client) as agent_instance:
+        app.state.agent = agent_instance
 
-            # ✅ Test call inside lifespan, with proper ChatMessage
-            try:
-                messages = [ChatMessage(role="user", content="Hello, what can you do?")]
-                async for update in agent_instance.run_stream(messages):
-                    logger.info(f"Agent test response: {update.text}")
-            except Exception as e:
-                logger.error("Agent test run failed during startup", exc_info=e)
+        # ✅ Proper thread creation and test run
+        try:
+            thread = await agent_instance.get_new_thread()
+            await thread.add_message(ChatMessage(role="user", content="Hello, what can you do?"))
 
-            yield
-    except Exception as e:
-        logger.error("Agent initialization failed", exc_info=e)
+            async for update in agent_instance.run_stream(thread):
+                logger.info(f"Agent test response: {update.text}")
+        except Exception as e:
+            logger.error("Agent test run failed during startup", exc_info=e)
+
         yield
-
 
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
 
