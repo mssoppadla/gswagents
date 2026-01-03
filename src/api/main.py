@@ -32,9 +32,9 @@ async def lifespan(app: fastapi.FastAPI):
     proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
     agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID", "").strip()
 
-    print("proj_endpoint loaded in api main is:", proj_endpoint)
-    print("agent_id in api main is:", agent_id)
-    
+    logger.info(f"proj_endpoint loaded in api main is: {proj_endpoint}")
+    logger.info(f"agent_id in api main is: {agent_id}")
+
     if not proj_endpoint:
         raise RuntimeError("AZURE_EXISTING_AIPROJECT_ENDPOINT must be set.")
     if not agent_id:
