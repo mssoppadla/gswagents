@@ -7,7 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from agent_framework import ChatAgent, Thread, ChatMessage
+from agent_framework import ChatAgent, ChatMessage
+from azure.ai.agents import Thread
+
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
@@ -50,8 +52,10 @@ async def lifespan(app: fastapi.FastAPI):
 
         yield
 
-
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
+
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -91,8 +95,6 @@ async def test_agent():
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error("Unhandled exception occurred", exc_info=exc)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-
 
 # #data Plane SDK chat integration with Azure AI Projects SDK
 
