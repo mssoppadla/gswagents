@@ -27,7 +27,7 @@ env_file = get_env_file_path()
 load_dotenv(env_file)
 
 
-@contextlib.asynccontextmanager
+
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
     # 1. Load environment variables
