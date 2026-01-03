@@ -21,7 +21,7 @@ env_file = get_env_file_path()
 load_dotenv(env_file)
 
 PROJECT_ENDPOINT = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
-AGENT_NAME = "agent-template-assistant"
+AGENT_NAME = "asst-companion"
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
