@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Onboarding</title>
+  </head>
+  <body>
+    <h2>Welcome, {{ tenant.slug }}</h2>
+    <form method="post" action="/onboarding/update">
+      <input type="hidden" name="tenant_id" value="{{ tenant.id }}">
+      <input type="hidden" name="org_id" value="{{ org.id }}">
+      <label>Your Unique Name (unique business name):</label>
+      <input type="text" name="slug" value="{{ tenant.slug }}">
+      <br>
+      <label>Organization name:</label>
+      <input type="text" name="org_name" value="{{ org.name }}">
+      <br>
+      <button type="submit">Save</button>
+    </form>
+  </body>
+</html>
