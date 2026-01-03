@@ -1,8 +1,3 @@
-#Actual working copy is modified here
-# Copyright (c) Microsoft. All rights reserved.
-# Licensed under the MIT license.
-# src/api/main.py
-
 import os
 import contextlib
 import fastapi
@@ -12,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from agent_framework import ChatAgent
+from agent_framework import ChatAgent, Thread, ChatMessage
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
@@ -20,7 +15,7 @@ from azure.ai.projects import AIProjectClient
 from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
-from agent_framework import ChatMessage
+
 logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
 load_dotenv(env_file)
@@ -46,11 +41,13 @@ async def lifespan(app: fastapi.FastAPI):
     async with ChatAgent(chat_client=chat_client) as agent_instance:
         app.state.agent = agent_instance
 
-        # Test call to verify agent responds
-        async for update in agent_instance.run_stream(
-            [ChatMessage(role="user", content="Hello, what can you do?")] 
-        ):
+        # Test call to verify agent responds (use Thread + ChatMessage)
+        test_thread = Thread(messages=[
+            ChatMessage(role="user", content="Hello, what can you do?")
+        ])
+        async for update in agent_instance.run_stream(test_thread):
             logger.info(f"Agent test response: {update.text}")
+
         yield
 
 
@@ -74,19 +71,19 @@ app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 
 
-
-
 @app.get("/healthz", tags=["ops"])
 async def healthz():
     return {"status": "ok"}
 
-# Add your test endpoint here
+# Test endpoint
 @app.get("/test-agent", tags=["ops"])
 async def test_agent():
     agent_instance = app.state.agent
-    messages = [ChatMessage(role="user", content="Hello, what can you do?")]
+    test_thread = Thread(messages=[
+        ChatMessage(role="user", content="which day is next years christmat fall on?")
+    ])
     result = []
-    async for update in agent_instance.run_stream(messages):
+    async for update in agent_instance.run_stream(test_thread):
         result.append(update.text)
     return {"response": " ".join(result)}
 
@@ -94,14 +91,6 @@ async def test_agent():
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error("Unhandled exception occurred", exc_info=exc)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-
-
-
-
-
-
-
 
 
 
