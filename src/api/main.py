@@ -42,11 +42,12 @@ async def lifespan(app: fastapi.FastAPI):
         app.state.agent = agent_instance
 
         try:
-            # ✅ Proper thread + messages usage
+            # ✅ Proper thread usage
             thread = agent_instance.get_new_thread()
-            messages = [ChatMessage(role="user", content="Hello, what can you do?")]
 
-            async for update in agent_instance.run_stream(thread, messages):
+            async for update in agent_instance.run_stream(
+                "Hello, what can you do?", thread=thread
+            ):
                 logger.info(f"Agent test response: {update.text}")
         except Exception as e:
             logger.error("Agent test run failed during startup", exc_info=e)
@@ -80,16 +81,19 @@ async def healthz():
 @app.get("/test-agent", tags=["ops"])
 async def test_agent():
     agent_instance = app.state.agent
-    messages = [ChatMessage(role="user", content="Which day does next year's Christmas fall on?")]
+
+    # Create a new thread for this test call
+    thread = agent_instance.get_new_thread()
+
     result = []
-    async for update in agent_instance.run_stream(messages):
+    # Pass the user input string along with the thread
+    async for update in agent_instance.run_stream(
+        "Which day does next year's Christmas fall on?", thread=thread
+    ):
         result.append(update.text)
+
     return {"response": " ".join(result)}
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error("Unhandled exception occurred", exc_info=exc)
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # #data Plane SDK chat integration with Azure AI Projects SDK
 
