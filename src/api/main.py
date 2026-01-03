@@ -20,7 +20,6 @@ from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
 from azure.core.credentials import AzureKeyCredential
-from agent_framework.azure import AzureAgentsClient, AzureAIAgentClient
 from azure.ai.agents import AgentsClient 
 
 
@@ -36,10 +35,7 @@ load_dotenv(env_file)
 async def lifespan(app: fastapi.FastAPI):
     # Load from env
     project_endpoint = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"# os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
-    api_key = os.environ.get("AZURE_AI_API_KEY", "").strip()
-
-    from azure.ai.agents import AgentsClient
-    from azure.core.credentials import AzureKeyCredential
+    api_key =os.environ.get("AZURE_AI_API_KEY", "").strip()  
 
 
     agents_client = AgentsClient(
