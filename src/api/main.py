@@ -29,20 +29,22 @@ load_dotenv(env_file)
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-    """
-    Lifespan context manager: binds Azure AI Foundry agent via ChatAgent framework.
-    """
     proj_endpoint = os.environ.get("AZURE_EXISTING_AIPROJECT_ENDPOINT", "").strip()
     agent_id = os.environ.get("AZURE_EXISTING_AGENT_ID", "").strip()
 
     if not proj_endpoint:
         raise RuntimeError("AZURE_EXISTING_AIPROJECT_ENDPOINT must be set.")
     if not agent_id:
-        raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set (e.g., 'Agent396:2025-08-07').")
+        raise RuntimeError("AZURE_EXISTING_AGENT_ID must be set.")
 
-    # Use CLI credential for local dev, DefaultAzureCredential for prod
+    # Use CLI credential locally, DefaultAzureCredential in Azure
+    if os.environ.get("APP_ENV") == "local":
+        credential = AzureCliCredential()
+    else:
+        credential = DefaultAzureCredential()
+
     async with (
-        AzureCliCredential() as credential,
+        credential,
         ChatAgent(
             chat_client=AzureAIAgentClient(
                 project_endpoint=proj_endpoint,
