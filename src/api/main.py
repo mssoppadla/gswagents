@@ -41,10 +41,10 @@ async def lifespan(app: fastapi.FastAPI):
     async with ChatAgent(chat_client=chat_client) as agent_instance:
         app.state.agent = agent_instance
 
-        # ✅ Proper thread creation and test run
+        # ✅ Correct thread usage (no await)
         try:
-            thread = await agent_instance.get_new_thread()
-            await thread.add_message(ChatMessage(role="user", content="Hello, what can you do?"))
+            thread = agent_instance.get_new_thread()
+            thread.add_message(ChatMessage(role="user", content="Hello, what can you do?"))
 
             async for update in agent_instance.run_stream(thread):
                 logger.info(f"Agent test response: {update.text}")
