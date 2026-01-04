@@ -14,7 +14,9 @@ python-jose[cryptography]
 argon2-cffi
 python-multipart
 agent-framework
-
+azure-appconfiguration-provider
+aiohttp
+azure-keyvault-secrets
 
 
 # fastapi>=0.121.2
