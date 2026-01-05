@@ -5,7 +5,7 @@ const sendBtn = document.getElementById("send");
 
 // In production, inject this from tenant onboarding flow
 // For now, hardcode or fetch from /chat/session
-const sessionToken = "e26f0fa7-e228-4acb-8391-757caaa99c5f";
+const sessionToken = "9b377c04-a99a-443d-8108-f09280269452";
 
 
 
@@ -20,7 +20,7 @@ function appendMessage(text, cls) {
 sendBtn.onclick = async () => {
     const message = input.value.trim();
     if (!message) return;
-
+    console.log("post Send click:", message);
     appendMessage("You: " + message, "user");
     input.value = "";
 
