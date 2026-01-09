@@ -1,3 +1,4 @@
+#src/ap/main.py
 import os
 import contextlib
 import fastapi
@@ -22,7 +23,7 @@ load_dotenv(env_file)
 
 PROJECT_ENDPOINT = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
 #AGENT_NAME = "asst-companion"
-
+logger.info(f"project endpoint api main.py: {PROJECT_ENDPOINT}")
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
     project_client = AIProjectClient(

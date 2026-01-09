@@ -6,7 +6,7 @@ const sendBtn = document.getElementById("send");
 // In production, inject this from tenant onboarding flow
 // For now, hardcode or fetch from /chat/session
 const sessionToken = "9b377c04-a99a-443d-8108-f09280269452";
-
+console.log("✅ widget.js loaded");
 
 
 function appendMessage(text, cls) {   
@@ -19,6 +19,7 @@ function appendMessage(text, cls) {
 
 sendBtn.onclick = async () => {
     const message = input.value.trim();
+    console.log("Binding send button:", sendBtn);
     if (!message) return;
     console.log("post Send click:", message);
     appendMessage("You: " + message, "user");
@@ -36,15 +37,15 @@ sendBtn.onclick = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ session_token: sessionToken, message })
         });
-
+        console.log("Response status:", response.status);
         if (!response.ok || !response.body) {
             agentDiv.textContent = "Agent: [Error: " + response.status + "]";
             return;
         }
 
         const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-
+        const decoder = new TextDecoder("utf-8");   
+        console.log("widget before while loop:");
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;

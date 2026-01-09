@@ -1,9 +1,11 @@
+#src/api/routers/chat.py
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 import uuid
+import logging
 
 from src.db.session import get_session
 from src.db.models import GuestIdentity
@@ -19,6 +21,7 @@ async def start_session(payload: ChatSessionCreate, session: AsyncSession = Depe
     guest = GuestIdentity(org_id=payload.org_id, session_token=token, created_at=datetime.utcnow())
     session.add(guest)
     await session.commit()
+    logging.info("Session request received:" + str(guest))
     return {"session_token": token}
 
 @router.post("/query/stream")
@@ -28,6 +31,7 @@ async def chat_query_stream(
     session: AsyncSession = Depends(get_session),
     chat_agent: ChatAgent = Depends(get_agent)
 ):
+    logging.info(" Received request from front end widget:" + str(payload))
     result = await session.execute(
         select(GuestIdentity).where(GuestIdentity.session_token == payload.session_token)
     )
