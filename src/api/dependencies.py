@@ -1,6 +1,7 @@
 import logging
 from fastapi import Request, HTTPException
 from src.api.core.foundryagent import run_agent_task
+import json
 
 class FoundryChatAgent:
     """
@@ -26,7 +27,13 @@ class FoundryChatAgent:
 
     async def run_stream(self, message: str, org_id: str, thread_id: str = None):
         result = await self.run(message, org_id, thread_id=thread_id)
-        yield result.get("response", "")
+        # yield the whole dict so frontend can JSON.parse it
+        yield json.dumps(result)
+
+    # working memoryless agent.
+    # async def run_stream(self, message: str, org_id: str, thread_id: str = None):
+    #     result = await self.run(message, org_id, thread_id=thread_id)
+    #     yield result.get("response", "")
 
 def get_agent(request: Request) -> FoundryChatAgent:
     project_client = getattr(request.app.state, "project_client", None)
