@@ -78,6 +78,14 @@ async def serve_widget(request: Request):
 app.mount("/static", StaticFiles(directory=templates_dir), name="static")
 ######################################
 
+
+# for config and query proxying
+@app.get("/config.json")
+async def proxy_config():
+    async with httpx.AsyncClient() as client:
+        resp = await client.get("https://chat.zenai.co.in/config.json")
+        return resp.json()
+
 # ✅ Proxy endpoint: UI forwards /chat/query to API on port 8000
 @app.post("/chat/query")
 async def proxy_query(request: Request):
