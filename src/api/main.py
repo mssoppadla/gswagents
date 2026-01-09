@@ -1,70 +1,71 @@
-#src/ap/main.py
+# src/api/main.py
 import os
+import sys
 import contextlib
 import fastapi
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from agent_framework import ChatAgent, ChatMessage
+from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 
-from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
 import logging
 
-logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
+# --- Logging setup ---
+logger = logging.getLogger("api")
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+# --- Environment setup ---
 env_file = get_env_file_path()
 load_dotenv(env_file)
 
-logging.basicConfig(
-    level=logging.INFO,  # ensure INFO messages are shown
-    format="%(asctime)s %(levelname)s %(name)s %(message)s"
-)
-logger = logging.getLogger("api")
-
 PROJECT_ENDPOINT = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
-#AGENT_NAME = "asst-companion"
-logger.info(f"project endpoint api main.py: {PROJECT_ENDPOINT}")
+logger.info(f"Project endpoint (api main.py): {PROJECT_ENDPOINT}")
+
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
+    # Initialize project client
     project_client = AIProjectClient(
         endpoint=PROJECT_ENDPOINT,
         credential=DefaultAzureCredential(),
     )
-    # agent = project_client.agents.get(agent_name=AGENT_NAME)
-    # logger.info(f"Retrieved agent: {agent.name}")
 
+    # Initialize chat client
     chat_client = AzureAIAgentClient(
         project_endpoint=PROJECT_ENDPOINT,
-        agent_id="asst_jX6sO8QjzcrtnxGPcXYLuAtE", #this is being executed during the startup of the asst_aBXy1JLGC9d3CtKdX1fnOED4
+        agent_id="asst_jX6sO8QjzcrtnxGPcXYLuAtE",  # ⚠️ verify this is the correct agent ID
         credential=DefaultAzureCredential()
     )
-    logging.info(f"[API proxy] AGENT ID IS: {chat_client.agent_id}")
-    print(f"Chat client created successfully.{chat_client}")
+    logger.info(f"[API startup] Using agent ID: {chat_client.agent_id}")
+    print(f"Chat client created successfully: {chat_client}", flush=True)
+
+    # Bind agent to app state
     async with ChatAgent(chat_client=chat_client) as agent_instance:
         app.state.agent = agent_instance
 
+        # Run a startup test to verify agent connectivity
         try:
-            # ✅ Proper thread usage
             thread = agent_instance.get_new_thread()
-
             async for update in agent_instance.run_stream(
                 "Hello, what can you do?", thread=thread
             ):
-                logger.info(f"Agent test response: {update.text}")
-                logging.info(f"AGENT response is repeating from logging: {update.text}")
-
+                logger.info(f"Startup agent test response: {update.text}")
         except Exception as e:
-            logger.error("Agent test run failed during startup", exc_info=e)
+            logger.error("Agent test run failed during startup", exc_info=True)
 
         yield
 
+# --- FastAPI app setup ---
 app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
 
 app.add_middleware(
@@ -79,12 +80,13 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.isdir(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+# Routers
 app.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
 app.include_router(guest.router, prefix="/guest", tags=["guest"])
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 
-
+# --- Health and test endpoints ---
 @app.get("/healthz", tags=["ops"])
 async def healthz():
     return {"status": "ok"}
@@ -92,18 +94,125 @@ async def healthz():
 @app.get("/test-agent", tags=["ops"])
 async def test_agent():
     agent_instance = app.state.agent
-
-    # Create a new thread for this test call
     thread = agent_instance.get_new_thread()
 
     result = []
-    # Pass the user input string along with the thread
     async for update in agent_instance.run_stream(
         "Which day does next year's Christmas fall on?", thread=thread
     ):
         result.append(update.text)
 
     return {"response": " ".join(result)}
+
+
+
+
+
+# #src/ap/main.py
+# import os
+# import contextlib
+# import fastapi
+# from fastapi import FastAPI, Request
+# from fastapi.responses import JSONResponse
+# from fastapi.staticfiles import StaticFiles
+# from fastapi.middleware.cors import CORSMiddleware
+# from dotenv import load_dotenv
+
+# from agent_framework import ChatAgent, ChatMessage
+# from agent_framework.azure import AzureAIAgentClient
+# from azure.identity import DefaultAzureCredential
+# from azure.ai.projects import AIProjectClient
+
+# from src import logging_config
+# from src.util import get_env_file_path
+# from src.api.routers import tenants, guest, chat, knowledge
+# import logging
+
+# env_file = get_env_file_path()
+# load_dotenv(env_file)
+
+# logging.basicConfig(
+#     level=logging.INFO,  # ensure INFO messages are shown
+#     format="%(asctime)s %(levelname)s %(name)s %(message)s"
+# )
+# logger = logging.getLogger("api")
+
+# PROJECT_ENDPOINT = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
+# #AGENT_NAME = "asst-companion"
+# logger.info(f"project endpoint api main.py: {PROJECT_ENDPOINT}")
+# @contextlib.asynccontextmanager
+# async def lifespan(app: fastapi.FastAPI):
+#     project_client = AIProjectClient(
+#         endpoint=PROJECT_ENDPOINT,
+#         credential=DefaultAzureCredential(),
+#     )
+#     # agent = project_client.agents.get(agent_name=AGENT_NAME)
+#     # logger.info(f"Retrieved agent: {agent.name}")
+
+#     chat_client = AzureAIAgentClient(
+#         project_endpoint=PROJECT_ENDPOINT,
+#         agent_id="asst_jX6sO8QjzcrtnxGPcXYLuAtE", #this is being executed during the startup of the asst_aBXy1JLGC9d3CtKdX1fnOED4
+#         credential=DefaultAzureCredential()
+#     )
+#     logging.info(f"[API proxy] AGENT ID IS: {chat_client.agent_id}")
+#     print(f"Chat client created successfully.{chat_client}")
+#     async with ChatAgent(chat_client=chat_client) as agent_instance:
+#         app.state.agent = agent_instance
+
+#         try:
+#             # ✅ Proper thread usage
+#             thread = agent_instance.get_new_thread()
+
+#             async for update in agent_instance.run_stream(
+#                 "Hello, what can you do?", thread=thread
+#             ):
+#                 logger.info(f"Agent test response: {update.text}")
+#                 logging.info(f"AGENT response is repeating from logging: {update.text}")
+
+#         except Exception as e:
+#             logger.error("Agent test run failed during startup", exc_info=e)
+
+#         yield
+
+# app = fastapi.FastAPI(title="Runtime Chat API", lifespan=lifespan)
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# static_dir = os.path.join(os.path.dirname(__file__), "static")
+# if os.path.isdir(static_dir):
+#     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# app.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
+# app.include_router(guest.router, prefix="/guest", tags=["guest"])
+# app.include_router(chat.router, prefix="/chat", tags=["chat"])
+# app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
+
+
+# @app.get("/healthz", tags=["ops"])
+# async def healthz():
+#     return {"status": "ok"}
+
+# @app.get("/test-agent", tags=["ops"])
+# async def test_agent():
+#     agent_instance = app.state.agent
+
+#     # Create a new thread for this test call
+#     thread = agent_instance.get_new_thread()
+
+#     result = []
+#     # Pass the user input string along with the thread
+#     async for update in agent_instance.run_stream(
+#         "Which day does next year's Christmas fall on?", thread=thread
+#     ):
+#         result.append(update.text)
+
+#     return {"response": " ".join(result)}
 
 
 # #data Plane SDK chat integration with Azure AI Projects SDK

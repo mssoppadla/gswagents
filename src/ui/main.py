@@ -80,7 +80,7 @@ app.mount("/static", StaticFiles(directory=templates_dir), name="static")
 async def proxy_query(request: Request):
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            "http://chat.zenai.co.in/chat/query",
+            "https://chat.zenai.co.in/chat/query",
             content=await request.body(),
             headers=request.headers
         )
@@ -90,22 +90,31 @@ async def proxy_query(request: Request):
 async def proxy_query_stream(request: Request):
     # Log incoming request
     body = await request.body()
-    logging.info(f"[UI proxy] Received stream request body: {body.decode('utf-8', errors='ignore')}")
-    logging.info(f"[UI proxy] Headers: {dict(request.headers)}")
+    logger.info("[UI proxy] Received stream request body: ...")
+    #logging.info(f"[UI proxy] Received stream request body: {body.decode('utf-8', errors='ignore')}")
+    #logging.info(f"[UI proxy] Headers: {dict(request.headers)}")
 
     async def event_generator():
         async with httpx.AsyncClient(timeout=None) as client:
+            logger.info("[UI proxy] Opening stream to backend /chat/query/stream")
             logging.info("[UI proxy] Opening stream to backend /chat/query/stream")
+            
             async with client.stream(
                 "POST",
-                "http://chat.zenai.co.in/chat/query/stream", # "http://127.0.0.1:8000/chat/query/stream",
+                "https://chat.zenai.co.in/chat/query/stream", # "http://127.0.0.1:8000/chat/query/stream",
                 data=body,   # ✅ use data instead of content
                 headers=request.headers,
             ) as upstream:
+                logger.info("[UI proxy] upstream statusL ")
                 logging.info(f"[UI proxy] Upstream status: {upstream.status_code}")
+                
+                
                 async for chunk in upstream.aiter_bytes():
+                    logger.info("[UI proxy] forwarding chunks")
                     logging.info(f"[UI proxy] Forwarding chunk: {chunk[:100]!r}")  # log first 100 bytes
+                    
                     yield chunk
+            logger.info("[UI proxy] upstream stream closed")
             logging.info("[UI proxy] Upstream stream closed")
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

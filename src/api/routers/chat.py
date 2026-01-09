@@ -28,7 +28,7 @@ async def start_session(payload: ChatSessionCreate, session: AsyncSession = Depe
     guest = GuestIdentity(org_id=payload.org_id, session_token=token, created_at=datetime.utcnow())
     session.add(guest)
     await session.commit()
-    logging.info("Session request received:" + str(guest))
+    logger.info("Session request received:" + str(payload) + " Generated token:" + str(token))
     return {"session_token": token}
 
 @router.post("/query/stream")
@@ -38,7 +38,7 @@ async def chat_query_stream(
     session: AsyncSession = Depends(get_session),
     chat_agent: ChatAgent = Depends(get_agent)
 ):
-    logging.info(" Received request from front end widget:" + str(payload))
+    logger.info(" Received request from front end widget:" + str(payload))
     result = await session.execute(
         select(GuestIdentity).where(GuestIdentity.session_token == payload.session_token)
     )
@@ -72,6 +72,8 @@ async def chat_query(
         raise HTTPException(status_code=404, detail="Session not found")
 
     response = await chat_agent.run(payload.message)
+    logger.info(" Received query request:" + str(payload) + " Response from agent:" + str(response.text))
+
     return {"reply": response.text}
 
 
