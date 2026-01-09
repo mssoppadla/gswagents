@@ -16,6 +16,7 @@ from azure.ai.projects import AIProjectClient
 from src import logging_config
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
+import logging
 
 logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
@@ -44,6 +45,7 @@ async def lifespan(app: fastapi.FastAPI):
         agent_id="asst_jX6sO8QjzcrtnxGPcXYLuAtE", #this is being executed during the startup of the asst_aBXy1JLGC9d3CtKdX1fnOED4
         credential=DefaultAzureCredential()
     )
+    logging.info(f"[API proxy] AGENT ID IS: {chat_client.agent_id}")
     print(f"Chat client created successfully.{chat_client}")
     async with ChatAgent(chat_client=chat_client) as agent_instance:
         app.state.agent = agent_instance
@@ -56,6 +58,8 @@ async def lifespan(app: fastapi.FastAPI):
                 "Hello, what can you do?", thread=thread
             ):
                 logger.info(f"Agent test response: {update.text}")
+                logging.info(f"AGENT response is repeating from logging: {update.text}")
+
         except Exception as e:
             logger.error("Agent test run failed during startup", exc_info=e)
 

@@ -13,6 +13,13 @@ from src.schemas.chat import ChatSessionCreate, ChatMessage
 from agent_framework import ChatAgent
 from src.api.dependencies import get_agent
 
+
+logging.basicConfig(
+    level=logging.INFO,  # ensure INFO messages are shown
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+logger = logging.getLogger("ui")
+
 router = APIRouter()
 
 @router.post("/session")
