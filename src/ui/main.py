@@ -113,11 +113,11 @@ async def proxy_query_stream(request: Request):
                 
                 
                 async for chunk in upstream.aiter_bytes():
-                    logger.info("[UI proxy] forwarding chunks")
+                    #logger.info("[UI proxy] forwarding chunks")
                     logging.info(f"[UI proxy] Forwarding chunk: {chunk[:100]!r}")  # log first 100 bytes
                     
                     yield chunk
             logger.info("[UI proxy] upstream stream closed")
-            logging.info("[UI proxy] Upstream stream closed")
+            #logging.info("[UI proxy] Upstream stream closed")
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

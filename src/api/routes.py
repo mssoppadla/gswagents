@@ -61,7 +61,7 @@ def authenticate(credentials: Optional[HTTPBasicCredentials] = Depends(security)
     if not basic_auth:
         logger.info("Skipping authentication: WEB_APP_USERNAME or WEB_APP_PASSWORD not set.")
         return
-    
+    logger.info("login using: WEB_APP_USERNAME or WEB_APP_PASSWORD not set.")
     correct_username = secrets.compare_digest(credentials.username, username)
     correct_password = secrets.compare_digest(credentials.password, password)
     if not (correct_username and correct_password):
