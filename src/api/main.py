@@ -17,19 +17,20 @@ from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
 import logging
 
-# --- Logging setup ---
-logger = logging.getLogger("api")
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+import logging
+
+# --- Logging setup aligned with Uvicorn ---
+logger = logging.getLogger("uvicorn.error")   # or "uvicorn.access"
 logger.setLevel(logging.INFO)
+logger.propagate = True
+
 
 # --- Environment setup ---
 env_file = get_env_file_path()
 load_dotenv(env_file)
 
 APP_CONFIG_ENDPOINT = "https://xappconfig.azconfig.io"
+logger.info(f"App config endpoint is gent ID: {APP_CONFIG_ENDPOINT}")
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
@@ -120,3 +121,7 @@ async def test_agent():
             response_text = message.text_messages[-1].text.value
 
     return {"response": response_text}
+
+@app.get("/")
+async def root():
+    return {"message": "Runtime Chat API is running"}

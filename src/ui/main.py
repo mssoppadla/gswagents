@@ -46,6 +46,9 @@ app.include_router(sources.router, prefix="/sources", tags=["sources"])
 app.include_router(widget.router, prefix="/widget", tags=["widget"])
 app.include_router(onboarding.router) # Prefix handled in router file
 
+@app.get("/", response_class=HTMLResponse, tags=["auth"])
+async def root(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
 @app.get("/login", response_class=HTMLResponse, tags=["auth"])
 async def login_page(request: Request):
@@ -90,14 +93,14 @@ async def proxy_query(request: Request):
 async def proxy_query_stream(request: Request):
     # Log incoming request
     body = await request.body()
-    logger.info("[UI proxy] Received stream request body: ...")
+    logger.info(f"[UI proxy] Received stream request body: ... ")
     #logging.info(f"[UI proxy] Received stream request body: {body.decode('utf-8', errors='ignore')}")
     #logging.info(f"[UI proxy] Headers: {dict(request.headers)}")
 
     async def event_generator():
         async with httpx.AsyncClient(timeout=None) as client:
             logger.info("[UI proxy] Opening stream to backend /chat/query/stream")
-            logging.info("[UI proxy] Opening stream to backend /chat/query/stream")
+            #logging.info("[UI proxy] Opening stream to backend /chat/query/stream")
             
             async with client.stream(
                 "POST",
@@ -106,7 +109,7 @@ async def proxy_query_stream(request: Request):
                 headers=request.headers,
             ) as upstream:
                 logger.info("[UI proxy] upstream statusL ")
-                logging.info(f"[UI proxy] Upstream status: {upstream.status_code}")
+             #   logging.info(f"[UI proxy] Upstream status: {upstream.status_code}")
                 
                 
                 async for chunk in upstream.aiter_bytes():
