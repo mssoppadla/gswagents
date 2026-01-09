@@ -21,6 +21,12 @@ logger = logging_config.configure_logging(os.getenv("APP_LOG_FILE", ""))
 env_file = get_env_file_path()
 load_dotenv(env_file)
 
+logging.basicConfig(
+    level=logging.INFO,  # ensure INFO messages are shown
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+logger = logging.getLogger("api")
+
 PROJECT_ENDPOINT = "https://xservnamechtagent.services.ai.azure.com/api/projects/xprojnamechtagent"
 #AGENT_NAME = "asst-companion"
 logger.info(f"project endpoint api main.py: {PROJECT_ENDPOINT}")
@@ -35,7 +41,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     chat_client = AzureAIAgentClient(
         project_endpoint=PROJECT_ENDPOINT,
-        agent_id="asst_aBXy1JLGC9d3CtKdX1fnOED4",
+        agent_id="asst_jX6sO8QjzcrtnxGPcXYLuAtE", #this is being executed during the startup of the asst_aBXy1JLGC9d3CtKdX1fnOED4
         credential=DefaultAzureCredential()
     )
     print(f"Chat client created successfully.{chat_client}")

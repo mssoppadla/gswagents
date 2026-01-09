@@ -14,6 +14,18 @@ import httpx
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,  # ensure INFO messages are shown
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+logger = logging.getLogger("ui")
+
+# then use logger instead of logging
+logger.info("[UI proxy] logging in UI: ...")
+
+
 app = FastAPI(title="Business Owner UI Service")
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates") 
@@ -33,6 +45,7 @@ app.include_router(org.router, prefix="/org", tags=["org"])
 app.include_router(sources.router, prefix="/sources", tags=["sources"])
 app.include_router(widget.router, prefix="/widget", tags=["widget"])
 app.include_router(onboarding.router) # Prefix handled in router file
+
 
 @app.get("/login", response_class=HTMLResponse, tags=["auth"])
 async def login_page(request: Request):
