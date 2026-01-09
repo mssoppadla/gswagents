@@ -15,7 +15,7 @@ from azure.ai.agents.models import ListSortOrder
 
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
-from src.api.core import config
+from src.api.core import config as config_router
 
 import logging
 
@@ -95,7 +95,7 @@ app.include_router(guest.router, prefix="/guest", tags=["guest"])
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 # after other routers 
-app.include_router(config.router, tags=["config"])
+app.include_router(config_router.router, tags=["config"])
 # --- Health and test endpoints ---
 @app.get("/healthz", tags=["ops"])
 async def healthz():
