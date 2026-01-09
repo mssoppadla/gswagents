@@ -59,13 +59,27 @@
   </style>
 </head>
 <body>
+  <!-- <div id="chat-widget">
+    <div id="chatbox"><div class="agent" id="welcome"></div>
+    <div id="controls">
+      <input id="input" type="text" placeholder="Type your message here..."/>
+      <button id="send">Send</button>
+    </div>
+  </div> -->
   <div id="chat-widget">
-    <div id="chatbox"></div>
+    <!-- Chat history -->
+    <div id="chatbox">
+      <div class="agent" id="welcome"></div>
+    </div>
+
+    <!-- Controls pinned at bottom -->
     <div id="controls">
       <input id="input" type="text" placeholder="Type your message here..."/>
       <button id="send">Send</button>
     </div>
   </div>
+
+
 
   <!-- ✅ Load tenant‑aware JS -->
   <script src="/static/widget.js" defer></script>

@@ -1,3 +1,4 @@
+#src/ui/routers/widget.py
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -10,9 +11,9 @@ class ConfigureWidgetRequest(BaseModel):
     welcome_message: str
 
 @router.get("/embed-code")
-async def get_embed_code(org_slug: str, welcome_message: str = "Welcome to our chat!"):
+async def get_embed_code(org_id: str, welcome_message: str = "Welcome to our chat!"):
     embed = f"""
-    <script src='https://chat.zenai.co.in/embed.js?org={org_slug}'></script>
+    <script src='https://chat.zenai.co.in/embed.js?org={org_id}'></script>
     <script>
       window.chatConfig = {{
         welcomeMessage: "{welcome_message}"
