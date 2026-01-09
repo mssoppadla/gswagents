@@ -3,7 +3,7 @@ uvicorn>=0.31.1
 gunicorn==23.0.0
 azure-identity==1.19.0
 #azure-ai-projects==2.0.0b2
-azure-ai-projects=1.0.0
+azure-ai-projects==1.0.0
 azure-identity 
 openai
 azure-ai-agents
