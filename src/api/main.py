@@ -95,7 +95,7 @@ app.include_router(guest.router, prefix="/guest", tags=["guest"])
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 # after other routers 
-app.include_router(configy.router, tags=["config"])
+app.include_router(config.router, tags=["config"])
 # --- Health and test endpoints ---
 @app.get("/healthz", tags=["ops"])
 async def healthz():
