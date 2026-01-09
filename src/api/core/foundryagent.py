@@ -42,7 +42,7 @@ async def run_agent_task(
                 # 2. Handle Memory & Custom Business Context
                 if thread_id:
                     # Retrieve existing thread and verify business_tenant_id matches if needed
-                    thread = await project.agents.threads.get_thread(thread_id)
+                    thread = await project.agents.threads.get(thread_id)
                 else:
                     # Create new thread and tag it with the Business Owner's ID in metadata
                     # Metadata allows up to 16 key/value pairs
