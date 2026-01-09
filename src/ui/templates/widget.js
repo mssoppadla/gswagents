@@ -5,7 +5,8 @@
 
   // Parse org_id from widget URL
   const urlParams = new URLSearchParams(window.location.search);
-  const orgId = urlParams.get("org_id");
+  const orgId = parseInt(urlParams.get("org_id"), 10);
+
 
   let API_BASE = null;
   let SESSION_TTL = null;
