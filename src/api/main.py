@@ -15,11 +15,11 @@ from azure.ai.agents.models import ListSortOrder
 
 from src.util import get_env_file_path
 from src.api.routers import tenants, guest, chat, knowledge
-from src.api.core import configy
+from src.api.core import config
 
 import logging
 
-import logging
+
 
 # --- Logging setup aligned with Uvicorn ---
 logger = logging.getLogger("uvicorn.error")   # or "uvicorn.access"
