@@ -101,12 +101,12 @@ async def run_agent_task(
 # --- Example Usage for a Business Owner ---
 async def example():
     result = await run_agent_task(
-        business_tenant_id="BIZ_OWNER_99821", # Your custom unique ID
-        org_id="Retail-Group-A",
+        business_tenant_id=str(org_id), # force string
+        org_id=str(org_id), # force string
         domain="Inventory",
         instructions="Format the output as a bulleted list.",
         description="Inventory Management Specialist",
-        task="Check stock levels for the spring collection.",
+        task=message,
         thread_id=None
     )
     print(f"Result for {result['business_tenant_id']}: {result.get('response')}")

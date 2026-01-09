@@ -38,7 +38,7 @@ def get_agent(request: Request) -> FoundryChatAgent:
     if not project_client or not agent_id:
         logging.error("Agent not bound to app.state")
         raise HTTPException(status_code=500, detail="Agent not initialized")
-
+    logging.error(f"Agent is bound to app.state : {agent_id}")
     return FoundryChatAgent(project_client=project_client, agent_id=agent_id)
 
 

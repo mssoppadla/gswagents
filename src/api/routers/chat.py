@@ -9,7 +9,7 @@ import logging
 from src.db.session import get_session
 from src.db.models import GuestIdentity
 from src.schemas.chat import ChatSessionCreate, ChatMessage
-from src.api.dependencies import get_agent, FoundryChatAgent  # use your wrapper
+from src.api.dependencies import get_agent, FoundryChatAgent
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,8 +44,8 @@ async def chat_query_stream(
         raise HTTPException(status_code=404, detail="Session not found")
 
     async def token_generator():
-        async for update in chat_agent.run_stream(payload.message, guest.org_id):
-            # update is already a string now
+        async for update in chat_agent.run_stream(payload.message, str(guest.org_id)):
+            # update is already a string (the response text)
             yield f"data: {update}\n\n"
 
     headers = {
@@ -69,9 +69,93 @@ async def chat_query(
     if not guest:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    response = await chat_agent.run(payload.message, guest.org_id)
-    logger.info("Received query request:" + str(payload) + " Response from agent:" + str(response.get('response')))
-    return {"reply": response.get("response")}
+    agent_result = await chat_agent.run(payload.message, str(guest.org_id))
+    logger.info("Received query request:" + str(payload) + " Response from agent:" + str(agent_result.get('response')))
+
+    # Return all four fields
+    return {
+        "thread_id": agent_result.get("thread_id"),
+        "business_tenant_id": agent_result.get("business_tenant_id"),
+        "response": agent_result.get("response"),
+        "status": agent_result.get("status")
+    }
+
+
+
+# from fastapi import APIRouter, Depends, HTTPException, Request
+# from fastapi.responses import StreamingResponse
+# from sqlalchemy.ext.asyncio import AsyncSession
+# from sqlalchemy import select
+# from datetime import datetime
+# import uuid
+# import logging
+
+# from src.db.session import get_session
+# from src.db.models import GuestIdentity
+# from src.schemas.chat import ChatSessionCreate, ChatMessage
+# from src.api.dependencies import get_agent, FoundryChatAgent  # use your wrapper
+
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s %(levelname)s %(name)s %(message)s"
+# )
+# logger = logging.getLogger("api")
+
+# router = APIRouter()
+
+# @router.post("/session")
+# async def start_session(payload: ChatSessionCreate, session: AsyncSession = Depends(get_session)):
+#     token = str(uuid.uuid4())
+#     guest = GuestIdentity(org_id=payload.org_id, session_token=token, created_at=datetime.utcnow())
+#     session.add(guest)
+#     await session.commit()
+#     logger.info("Session request received:" + str(payload) + " Generated token:" + str(token))
+#     return {"session_token": token}
+
+# @router.post("/query/stream")
+# async def chat_query_stream(
+#     payload: ChatMessage,
+#     request: Request,
+#     session: AsyncSession = Depends(get_session),
+#     chat_agent: FoundryChatAgent = Depends(get_agent)
+# ):
+#     logger.info("Received request from front end widget:" + str(payload))
+#     result = await session.execute(
+#         select(GuestIdentity).where(GuestIdentity.session_token == payload.session_token)
+#     )
+#     guest = result.scalar_one_or_none()
+#     if not guest:
+#         raise HTTPException(status_code=404, detail="Session not found")
+
+#     async def token_generator():
+#         async for update in chat_agent.run_stream(payload.message, guest.org_id):
+#             # update is already a string now
+#             yield f"data: {update}\n\n"
+
+#     headers = {
+#         "Cache-Control": "no-cache",
+#         "Connection": "keep-alive",
+#         "Content-Type": "text/event-stream"
+#     }
+
+#     return StreamingResponse(token_generator(), headers=headers)
+
+# @router.post("/query")
+# async def chat_query(
+#     payload: ChatMessage,
+#     session: AsyncSession = Depends(get_session),
+#     chat_agent: FoundryChatAgent = Depends(get_agent)
+# ):
+#     result = await session.execute(
+#         select(GuestIdentity).where(GuestIdentity.session_token == payload.session_token)
+#     )
+#     guest = result.scalar_one_or_none()
+#     if not guest:
+#         raise HTTPException(status_code=404, detail="Session not found")
+
+#     response = await chat_agent.run(payload.message, guest.org_id)
+#     logger.info("Received query request:" + str(payload) + " Response from agent:" + str(response.get('response')))
+#     return {"reply": response.get("response")}
 
 
 
