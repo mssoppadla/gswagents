@@ -82,27 +82,55 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         await session.flush()
 
     # Org
+
     org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
     if not org:
-        raw_key = secrets.token_urlsafe(32)  # generate random API key
-        api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
-        org = Org(
-            tenant_id=tenant.id,
-            slug=email,
-            name=email,
-            public_api_key_hash=api_key_hash,
-            allowed_domain=email.split("@")[1]
-        )
-        session.add(org)
-        await session.flush()
+        # also check by slug to avoid duplicates
+        existing_org = await session.scalar(select(Org).where(Org.slug == email))
+        if existing_org:
+            org = existing_org
+        else:
+            raw_key = secrets.token_urlsafe(32)
+            api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+            org = Org(
+                tenant_id=tenant.id,
+                slug=email,
+                name=email,
+                public_api_key_hash=api_key_hash,
+                allowed_domain=email.split("@")[1]
+            )
+            session.add(org)
+            await session.flush()
 
-        # Store raw key securely in secrets
-        session.add(Secret(
-            tenant_id=tenant.id,
-            org_id=org.id,
-            key="public_api_key",
-            value=encrypt(raw_key),
-        ))
+            # Store raw key securely in secrets
+            session.add(Secret(
+                tenant_id=tenant.id,
+                org_id=org.id,
+                key="public_api_key",
+                value=encrypt(raw_key),
+            ))
+
+    # org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
+    # if not org:
+    #     raw_key = secrets.token_urlsafe(32)  # generate random API key
+    #     api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    #     org = Org(
+    #         tenant_id=tenant.id,
+    #         slug=email,
+    #         name=email,
+    #         public_api_key_hash=api_key_hash,
+    #         allowed_domain=email.split("@")[1]
+    #     )
+    #     session.add(org)
+    #     await session.flush()
+
+    #     # Store raw key securely in secrets
+    #     session.add(Secret(
+    #         tenant_id=tenant.id,
+    #         org_id=org.id,
+    #         key="public_api_key",
+    #         value=encrypt(raw_key),
+    #     ))
 
     # User
     user = await session.scalar(select(User).where(User.email == email))
