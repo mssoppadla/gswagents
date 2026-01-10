@@ -142,10 +142,11 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
     user_info = decode_id_token(tokens["id_token"])
     email, name = user_info["email"], user_info.get("name")
 
-    domain = email.split("@")[1]
+    #domain = email.split("@")[1]
+    domain = email
 
     # Tenant: look up by domain (or add a dedicated Tenant.email if you prefer)
-    tenant = await session.scalar(select(Tenant).where(Tenant.domain == domain))
+    tenant = await session.scalar(select(Tenant).where(Tenant.email == email))
     if not tenant:
         tenant = Tenant(
             slug=name or email,   # human‑friendly slug
@@ -207,8 +208,5 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
     await session.commit()
 
     # Redirect with the correct tenant/org IDs
-    return RedirectResponse(
-        url=f"/onboarding/dashboard?tenant_id={tenant.id}&org_id={org.id}",
-        status_code=303
-    )
+    return RedirectResponse(url=f"/onboarding/edit?tenant_id={tenant.id}&org_id={org.id}")
 
