@@ -11,7 +11,7 @@ class Tenant(Base):
     slug = Column(String(255), nullable=False, unique=True)
     domain = Column(String(255), nullable=False)
     logo_url = Column(String(255))
-    email = Column(String(50))
+    email = Column(String(255), unique=True, nullable=False)
     chat_logo_url = Column(String(255))
     welcome_message = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
