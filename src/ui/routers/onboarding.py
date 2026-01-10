@@ -84,3 +84,29 @@ async def update_page(
     await session.commit()
 
     return RedirectResponse(url=f"/dashboard?tenant_id={tenant_id}", status_code=303)
+
+@router.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(
+    tenant_id: int,
+    org_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    templates: Jinja2Templates = Depends(get_templates)
+):
+    # Fetch full ORM objects
+    tenant = await session.get(Tenant, tenant_id)
+    org = await session.get(Org, org_id)
+
+    if not tenant or not org:
+        return HTMLResponse("<h3>Error: Tenant or Organization not found.</h3>", status_code=404)
+
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "tenant": tenant,
+            "org": org,
+            "tenant_id": tenant_id,
+            "org_id": org_id
+        }
+    )
