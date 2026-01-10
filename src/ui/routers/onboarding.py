@@ -35,7 +35,6 @@ async def edit_page(
     return templates.TemplateResponse("onboarding_edit.html", {"request": request, "tenant": tenant, "org": org})
 
 
-
 @router.post("/update")
 async def update_page(
     tenant_id: int = Form(...),
@@ -49,17 +48,19 @@ async def update_page(
     google_urls: Optional[List[str]] = Form(None),           # multiple URLs
     session: AsyncSession = Depends(get_session)
 ):
-    # Check uniqueness of slug
-    existing = await session.scalar(select(Tenant).where(Tenant.slug == slug))
-    if existing and existing.id != tenant_id:
-        return HTMLResponse("<h3>Error: Slug already taken. Please choose another.</h3>", status_code=400)
-
-    # Fetch tenant and org
+    # Fetch tenant and org first
     tenant = await session.scalar(select(Tenant).where(Tenant.id == tenant_id))
     org = await session.scalar(select(Org).where(Org.id == org_id))
 
     if not tenant or not org:
         return HTMLResponse("<h3>Error: Tenant or Organization not found.</h3>", status_code=404)
+
+    # Check uniqueness of slug:
+    # - If another tenant already has this slug, block it.
+    # - If slug belongs to this tenant, allow update.
+    existing = await session.scalar(select(Tenant).where(Tenant.slug == slug))
+    if existing and existing.id != tenant.id:
+        return HTMLResponse("<h3>Error: Slug already taken. Please choose another.</h3>", status_code=400)
 
     # Update tenant and org with new fields
     tenant.slug = slug
