@@ -40,13 +40,13 @@ async def edit_page(
 async def update_page(
     tenant_id: int = Form(...),
     org_id: int = Form(...),
-    slug: str = Form(...),
-    org_name: str = Form(...),
-    subscription: str = Form(...),
-    agent_instructions: str = Form(...),
-    temperature: float = Form(...),
-    upload_files: List[UploadFile] = File(None),   # multiple files
-    google_urls: List[str] = Form(None),           # multiple URLs
+    slug: Optional[str] = Form(...),
+    org_name: Optional[str] = Form(...),
+    subscription: Optional[str] = Form(...),
+    agent_instructions: Optional[str] = Form(...),
+    temperature: Optional[float] = Form(...),
+    upload_files: Optional[List[UploadFile]] = File(None),   # multiple files
+    google_urls: Optional[List[str]] = Form(None),           # multiple URLs
     session: AsyncSession = Depends(get_session)
 ):
     # Check uniqueness of slug
