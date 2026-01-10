@@ -8,7 +8,7 @@ from src.db.session import get_session
 from src.db.models import Tenant, Organization as Org
 from dotenv import load_dotenv
 from fastapi.templating import Jinja2Templates 
-from typing import List
+from typing import List , Optional
 from fastapi import Form, File, UploadFile
 
 # CHANGE THIS IMPORT:
