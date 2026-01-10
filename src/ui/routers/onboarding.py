@@ -40,10 +40,10 @@ async def edit_page(
 async def update_page(
     tenant_id: int = Form(...),
     org_id: int = Form(...),
-    slug: Optional[str] = Form(...),
-    org_name: Optional[str] = Form(...),
+    slug: str = Form(...),
+    org_name: str = Form(...),
     subscription: Optional[str] = Form(...),
-    agent_instructions: Optional[str] = Form(...),
+    agent_instructions: Optional[str] = Form(None),
     temperature: Optional[float] = Form(...),
     upload_files: Optional[List[UploadFile]] = File(None),   # multiple files
     google_urls: Optional[List[str]] = Form(None),           # multiple URLs
