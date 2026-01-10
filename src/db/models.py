@@ -1,4 +1,4 @@
-
+#src/db/models.py
 from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, relationship
@@ -11,7 +11,7 @@ class Tenant(Base):
     slug = Column(String(255), nullable=False, unique=True)
     domain = Column(String(255), nullable=False)
     logo_url = Column(String(255))
-    theme_color = Column(String(50))
+    email = Column(String(50))
     chat_logo_url = Column(String(255))
     welcome_message = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
