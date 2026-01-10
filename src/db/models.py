@@ -29,7 +29,7 @@ class Organization(Base):
     slug = Column(String(255), nullable=False, unique=True)
     name = Column(String(255), nullable=False)
     public_api_key_hash = Column(String(255), nullable=False)
-    allowed_domain = Column(String(255))
+    email = Column(String(255), unique=True, nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     tenant = relationship("Tenant", back_populates="organizations")

@@ -141,46 +141,53 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
     tokens = await exchange_code_for_tokens(code)
     user_info = decode_id_token(tokens["id_token"])
     email, name = user_info["email"], user_info.get("name")
-
-    #domain = email.split("@")[1]
     domain = email
 
-    # Tenant: look up by domain (or add a dedicated Tenant.email if you prefer)
+    # Tenant: look up by email
     tenant = await session.scalar(select(Tenant).where(Tenant.email == email))
     if not tenant:
         tenant = Tenant(
-            slug=name or email,   # human‑friendly slug
+            slug=name or email,
             domain=domain,
+            email=email
         )
         session.add(tenant)
         await session.flush()
 
-    # Org: ensure one org per tenant
+    # Org: one org per tenant
     org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
-    if not org:
-        existing_org = await session.scalar(select(Org).where(Org.slug == email))
-        if existing_org:
-            org = existing_org
+    if org:
+        # If slug/email already match, don't update them
+        if org.email == email:
+            # Update other fields if needed
+            org.name = name or org.name
+            org.email = email
+            # You could also refresh public_api_key_hash if you want
         else:
-            raw_key = secrets.token_urlsafe(32)
-            api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
-            org = Org(
-                tenant_id=tenant.id,
-                slug=email,
-                name=name or email,
-                public_api_key_hash=api_key_hash,
-                allowed_domain=domain,
-            )
-            session.add(org)
-            await session.flush()
+            # If mismatch, handle according to your business rules
+            return HTMLResponse("<h3>Error: Organization slug/email mismatch.</h3>", status_code=400)
+    else:
+        # Create new org
+        raw_key = secrets.token_urlsafe(32)
+        api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+        org = Org(
+            tenant_id=tenant.id,
+            slug=email,
+            name=name or email,
+            public_api_key_hash=api_key_hash,
+            email=email,
+            allowed_domain=domain,
+        )
+        session.add(org)
+        await session.flush()
 
-            # Store raw key securely in secrets
-            session.add(Secret(
-                tenant_id=tenant.id,
-                org_id=org.id,
-                key="public_api_key",
-                value=encrypt(raw_key),
-            ))
+        # Store raw key securely in secrets
+        session.add(Secret(
+            tenant_id=tenant.id,
+            org_id=org.id,
+            key="public_api_key",
+            value=encrypt(raw_key),
+        ))
 
     # User: ensure user record exists
     user = await session.scalar(select(User).where(User.email == email))
@@ -189,15 +196,26 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
         session.add(user)
         await session.flush()
 
-    # Google tokens in secrets
+    # Google tokens in secrets (always update/insert)
     def add_secret(key, value):
         if value:
-            session.add(Secret(
-                tenant_id=tenant.id,
-                org_id=org.id,
-                key=key,
-                value=encrypt(value),
-            ))
+            # Upsert logic: delete old secret with same key first
+            existing_secret = await session.scalar(
+                select(Secret).where(
+                    Secret.tenant_id == tenant.id,
+                    Secret.org_id == org.id,
+                    Secret.key == key
+                )
+            )
+            if existing_secret:
+                existing_secret.value = encrypt(value)
+            else:
+                session.add(Secret(
+                    tenant_id=tenant.id,
+                    org_id=org.id,
+                    key=key,
+                    value=encrypt(value),
+                ))
 
     add_secret("google_access_token", tokens.get("access_token"))
     add_secret("google_refresh_token", tokens.get("refresh_token"))
@@ -207,6 +225,4 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
 
     await session.commit()
 
-    # Redirect with the correct tenant/org IDs
     return RedirectResponse(url=f"/onboarding/edit?tenant_id={tenant.id}&org_id={org.id}")
-
