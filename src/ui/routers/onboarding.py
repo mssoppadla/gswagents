@@ -63,9 +63,9 @@ async def update_page(
 
     # Update tenant and org with new fields
     tenant.slug = slug
-    tenant.subscription = subscription
-    tenant.agent_instructions = agent_instructions
-    tenant.temperature = temperature
+    #tenant.subscription = subscription
+    #tenant.agent_instructions = agent_instructions
+    #tenant.temperature = temperature
     org.name = org_name
 
     # Handle uploaded files (store them somewhere or save metadata)
