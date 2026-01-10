@@ -1,64 +1,111 @@
-
 <!DOCTYPE html>
 <html>
-<head><title>Dashboard</title></head>
+<head>
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table th, .details-table td {
+            text-align: left;
+            padding: 0.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+        .chat-embed {
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            margin: 0 auto;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .chat-embed iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 8px;
+        }
+        .copy-btn {
+            background-color: #2c3e50;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .copy-btn:hover {
+            background-color: #1a242f;
+        }
+    </style>
+</head>
 <body>
     <h1>Welcome to the Dashboard</h1>
-    <p>Viewing data for Tenant ID: {{ tenant_id }}</p>
+    <p>You are viewing data for <strong>Org ID:</strong> {{ org_id }}</p>
 
-    <h2>Embed Chat Widget</h2>
-    <pre>
-        <iframe 
-            <style>
-            html, body {
-                margin: 0;
-                padding: 0;
-                height: 100%;
-                overflow: hidden; /* prevent outer scroll */
-            }
+    <!-- Tenant Details -->
+    <div class="card">
+        <h2>Tenant Details</h2>
+        <table class="details-table">
+            <tr><th>Business Name</th><td>{{ tenant.slug }}</td></tr>
+            <tr><th>Domain</th><td>{{ tenant.domain }}</td></tr>
+            <tr><th>Subscription</th><td>{{ tenant.subscription or "Not set" }}</td></tr>
+            <tr><th>Agent Instructions</th><td>{{ tenant.agent_instructions or "None" }}</td></tr>
+            <tr><th>Temperature</th><td>{{ tenant.temperature or "Default" }}</td></tr>
+        </table>
+    </div>
 
-            .chat-embed {
-                width: 100%;
-                max-width: 600px;
-                height: 100vh;
-                margin: 0 auto;
-                box-sizing: border-box;
-                overflow: hidden;
-            }
-
-            .chat-embed iframe {
-                display: block;
-                width: 100%;
-                height: 100%;
-                border: 0;
-                border-radius: 8px;
-            }
-
-            @media (max-width: 1024px) {
-                .chat-embed {
-                height: 100vh;
-                }
-            }
-
-            @media (max-width: 768px) {
-                .chat-embed {
-                width: 100%;
-                height: 100vh;
-                border-radius: 0;
-                }
-            }
-            </style>
-
-            <div class="chat-embed">
+    <!-- Chat Widget Preview -->
+    <div class="card">
+        <h2>Chat Widget Preview</h2>
+        <div class="chat-embed">
             <iframe 
-                src="https://app.zenai.co.in/widget?org_id=1&welcome=👋+Welcome+to+ZenAI+Support!"
+                src="https://app.zenai.co.in/widget?org_id={{ org.id }}&welcome=👋+Welcome+to+ZenAI+Support!"
                 allow="clipboard-read; clipboard-write; microphone; camera"
                 scrolling="no">
             </iframe>
-            </div>
+        </div>
+    </div>
 
-        </iframe>
-    </pre>
+    <!-- Embed Code with Copy Button -->
+    <div class="card">
+        <h2>Embed Code</h2>
+        <pre id="embedCode">
+&lt;iframe 
+    src="https://app.zenai.co.in/widget?org_id={{ org.id }}&welcome=👋+Welcome+to+ZenAI+Support!"
+    allow="clipboard-read; clipboard-write; microphone; camera"
+    scrolling="no"
+    style="width:100%; max-width:600px; height:80vh; border:0; border-radius:8px;"&gt;
+&lt;/iframe&gt;
+        </pre>
+        <button class="copy-btn" onclick="copyEmbedCode()">Copy Embed Code</button>
+    </div>
 
+    <script>
+        function copyEmbedCode() {
+            const codeBlock = document.getElementById("embedCode").innerText;
+            navigator.clipboard.writeText(codeBlock).then(() => {
+                alert("Embed code copied to clipboard!");
+            });
+        }
+    </script>
 </body>
 </html>
