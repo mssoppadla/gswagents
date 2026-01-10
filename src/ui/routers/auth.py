@@ -65,27 +65,98 @@ async def google_login():
     print("Google OAuth URL:", url)
     return RedirectResponse(url=url)
 
+# @router.get("/google/callback")
+# async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
+#     tokens = await exchange_code_for_tokens(code)
+#     user_info = decode_id_token(tokens["id_token"])
+#     email, name = user_info["email"], user_info.get("name")
+
+#     # Tenant
+#     tenant = await session.scalar(select(Tenant).where(Tenant.slug == email))
+#     if not tenant:
+#         tenant = Tenant(
+#             slug=email,
+#             domain=email.split("@")[1],  # mandatory
+#         )
+#         session.add(tenant)
+#         await session.flush()
+
+#     # Org
+
+#     org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
+#     if not org:
+#         # also check by slug to avoid duplicates
+#         existing_org = await session.scalar(select(Org).where(Org.slug == email))
+#         if existing_org:
+#             org = existing_org
+#         else:
+#             raw_key = secrets.token_urlsafe(32)
+#             api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+#             org = Org(
+#                 tenant_id=tenant.id,
+#                 slug=email,
+#                 name=email,
+#                 public_api_key_hash=api_key_hash,
+#                 allowed_domain=email.split("@")[1]
+#             )
+#             session.add(org)
+#             await session.flush()
+
+#             # Store raw key securely in secrets
+#             session.add(Secret(
+#                 tenant_id=tenant.id,
+#                 org_id=org.id,
+#                 key="public_api_key",
+#                 value=encrypt(raw_key),
+#             ))
+
+
+#     # User
+#     user = await session.scalar(select(User).where(User.email == email))
+#     if not user:
+#         user = User(org_id=org.id, email=email, hashed_password=None)
+#         session.add(user)
+#         await session.flush()
+
+#     # Google tokens in secrets
+#     def add_secret(key, value):
+#         if value:
+#             session.add(Secret(
+#                 tenant_id=tenant.id,
+#                 org_id=org.id,
+#                 key=key,
+#                 value=encrypt(value),
+#             ))
+
+#     add_secret("google_access_token", tokens.get("access_token"))
+#     add_secret("google_refresh_token", tokens.get("refresh_token"))
+#     add_secret("google_id_token", tokens.get("id_token"))
+#     add_secret("google_scope", tokens.get("scope"))
+#     add_secret("google_token_type", tokens.get("token_type"))
+
+#     await session.commit()
+#     return RedirectResponse(url=f"/onboarding/edit?tenant_id={tenant.id}&org_id={org.id}")
 @router.get("/google/callback")
 async def google_callback(code: str, session: AsyncSession = Depends(get_session)):
     tokens = await exchange_code_for_tokens(code)
     user_info = decode_id_token(tokens["id_token"])
     email, name = user_info["email"], user_info.get("name")
 
-    # Tenant
-    tenant = await session.scalar(select(Tenant).where(Tenant.slug == email))
+    domain = email.split("@")[1]
+
+    # Tenant: look up by domain (or add a dedicated Tenant.email if you prefer)
+    tenant = await session.scalar(select(Tenant).where(Tenant.domain == domain))
     if not tenant:
         tenant = Tenant(
-            slug=email,
-            domain=email.split("@")[1],  # mandatory
+            slug=name or email,   # human‑friendly slug
+            domain=domain,
         )
         session.add(tenant)
         await session.flush()
 
-    # Org
-
+    # Org: ensure one org per tenant
     org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
     if not org:
-        # also check by slug to avoid duplicates
         existing_org = await session.scalar(select(Org).where(Org.slug == email))
         if existing_org:
             org = existing_org
@@ -95,9 +166,9 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
             org = Org(
                 tenant_id=tenant.id,
                 slug=email,
-                name=email,
+                name=name or email,
                 public_api_key_hash=api_key_hash,
-                allowed_domain=email.split("@")[1]
+                allowed_domain=domain,
             )
             session.add(org)
             await session.flush()
@@ -110,29 +181,7 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
                 value=encrypt(raw_key),
             ))
 
-    # org = await session.scalar(select(Org).where(Org.tenant_id == tenant.id))
-    # if not org:
-    #     raw_key = secrets.token_urlsafe(32)  # generate random API key
-    #     api_key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
-    #     org = Org(
-    #         tenant_id=tenant.id,
-    #         slug=email,
-    #         name=email,
-    #         public_api_key_hash=api_key_hash,
-    #         allowed_domain=email.split("@")[1]
-    #     )
-    #     session.add(org)
-    #     await session.flush()
-
-    #     # Store raw key securely in secrets
-    #     session.add(Secret(
-    #         tenant_id=tenant.id,
-    #         org_id=org.id,
-    #         key="public_api_key",
-    #         value=encrypt(raw_key),
-    #     ))
-
-    # User
+    # User: ensure user record exists
     user = await session.scalar(select(User).where(User.email == email))
     if not user:
         user = User(org_id=org.id, email=email, hashed_password=None)
@@ -156,5 +205,10 @@ async def google_callback(code: str, session: AsyncSession = Depends(get_session
     add_secret("google_token_type", tokens.get("token_type"))
 
     await session.commit()
-    return RedirectResponse(url=f"/onboarding/edit?tenant_id={tenant.id}&org_id={org.id}")
+
+    # Redirect with the correct tenant/org IDs
+    return RedirectResponse(
+        url=f"/onboarding/dashboard?tenant_id={tenant.id}&org_id={org.id}",
+        status_code=303
+    )
 
