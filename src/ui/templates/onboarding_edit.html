@@ -1,20 +1,233 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Onboarding</title>
-  </head>
-  <body>
-    <h2>Welcome, {{ tenant.slug }}</h2>
-    <form method="post" action="/onboarding/update">
-      <input type="hidden" name="tenant_id" value="{{ tenant.id }}">
-      <input type="hidden" name="org_id" value="{{ org.id }}">
-      <label>Your Unique Name (unique business name):</label>
-      <input type="text" name="slug" value="{{ tenant.slug }}">
-      <br>
-      <label>Organization name:</label>
-      <input type="text" name="org_name" value="{{ org.name }}">
-      <br>
-      <button type="submit">Save</button>
-    </form>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Onboarding</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 40px;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #0078d4;
+    }
+
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .input-row input {
+      flex: 1;
+    }
+
+    .remove-btn {
+      margin-left: 8px;
+      background: #ffdddd;
+      color: #a00;
+      border: none;
+      font-size: 1.2em;
+      line-height: 1;
+      padding: 4px 10px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .remove-btn:hover {
+      background: #ffbbbb;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .slider-value {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      background: #0078d4;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005a9e;
+    }
+
+    .add-btn {
+      margin-top: 8px;
+      background: #e5f1fb;
+      color: #0078d4;
+      border: 1px solid #0078d4;
+      font-size: 0.9em;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .add-btn:hover {
+      background: #d0e7f9;
+    }
+  </style>
+</head>
+<body>
+  <h2>Welcome, {{ tenant.slug }}</h2>
+
+  <form method="post" action="/onboarding/update" enctype="multipart/form-data">
+    <input type="hidden" name="tenant_id" value="{{ tenant.id }}">
+    <input type="hidden" name="org_id" value="{{ org.id }}">
+
+    <!-- Business Name -->
+    <label>Choose Your Business Name (Must be unique if hosting in our domain):</label>
+    <input name="slug" placeholder="Enter your business /Store Name">
+
+    <!-- Website Address -->
+    <label>Update your website address to embed the Chat:</label>
+    <input type="text" name="org_name" value="{{ org.name }}">
+
+    <!-- Subscription Plan -->
+    <label>Choose Your Subscription Plan:</label>
+    <select name="subscription">
+      <option value="standard">Standard</option>
+      <option value="premium">Premium</option>
+      <option value="pro">Pro</option>
+    </select>
+
+    <!-- Agent Instructions -->
+    <label>Business Instructions for the Agent:</label> 
+    <textarea name="agent_instructions" placeholder="e.g., You are a helpful Retail store associate"></textarea>
+
+    <!-- Temperature Slider -->
+    <label>Response Randomness (0–1) (Predictable to Creative):</label>
+    <input type="range" id="temperature-slider" name="temperature" min="0" max="1" step="0.01" value="{{ tenant.temperature }}">
+    <div class="slider-value">Current: <span id="temperature-value">{{ tenant.temperature }}</span></div>
+
+    <!-- Top P Slider 
+    <label>Top P (0–1) (Narrow to Diverse):</label>
+    <input type="range" id="top-p-slider" name="top_p" min="0" max="1" step="0.01" value="{{ tenant.top_p }}">
+    <div class="slider-value">Current: <span id="top-p-value">{{ tenant.top_p }}</span></div>
+	-->
+    <!-- File Uploads -->
+    <label>Upload Files (e.g., PDF, DOCX, TXT):</label>
+    <div id="file-container">
+      <div class="input-row">
+        <input type="file" name="upload_files[]">
+        <button type="button" class="remove-btn" onclick="removeField(this)">×</button>
+      </div>
+    </div>
+    <button type="button" class="add-btn" onclick="addFileField()">+ Add another file</button>
+
+    <!-- Google Docs/Sheets URLs -->
+    <label>Paste URLs for Google Sheets or Google Docs:</label>
+    <div id="url-container">
+      <div class="input-row">
+        <input type="url" name="google_urls[]" placeholder="https://docs.google.com/...">
+        <button type="button" class="remove-btn" onclick="removeField(this)">×</button>
+      </div>
+    </div>
+    <button type="button" class="add-btn" onclick="addUrlField()">+ Add another link</button>
+
+    <!-- Save Button -->
+    <button type="submit">Save</button>
+  </form>
+
+  <script>
+    // Dynamic slider updates
+    const tempSlider = document.getElementById('temperature-slider');
+    const tempValue = document.getElementById('temperature-value');
+    tempValue.textContent = tempSlider.value;
+    tempSlider.addEventListener('input', () => {
+      tempValue.textContent = tempSlider.value;
+    });
+
+    // const topPSlider = document.getElementById('top-p-slider');
+    // const topPValue = document.getElementById('top-p-value');
+    // topPValue.textContent = topPSlider.value;
+    // topPSlider.addEventListener('input', () => {
+    //   topPValue.textContent = topPSlider.value;
+    // });
+	
+    // Dynamic add/remove fields
+    function addUrlField() {
+      const container = document.getElementById('url-container');
+      const row = document.createElement('div');
+      row.className = 'input-row';
+      row.innerHTML = `
+        <input type="url" name="google_urls[]" placeholder="https://docs.google.com/...">
+        <button type="button" class="remove-btn" onclick="removeField(this)">×</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function addFileField() {
+      const container = document.getElementById('file-container');
+      const row = document.createElement('div');
+      row.className = 'input-row';
+      row.innerHTML = `
+        <input type="file" name="upload_files[]">
+        <button type="button" class="remove-btn" onclick="removeField(this)">×</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeField(button) {
+      const row = button.parentNode;
+      const container = row.parentNode;
+      container.removeChild(row);
+
+      // Ensure at least one empty input remains
+      if (container.children.length === 0) {
+        if (container.id === 'file-container') {
+          addFileField();
+        } else if (container.id === 'url-container') {
+          addUrlField();
+        }
+      }
+    }
+  </script>
+</body>
 </html>

@@ -9,6 +9,137 @@
       padding: 0;
       width: 100%;
       height: 100%;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f5f7fa;
+    }
+
+    /* Outer container */
+    #chat-widget {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      max-width: 420px;   /* iframe friendly */
+      max-height: 640px;
+      margin: auto;
+      box-sizing: border-box;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Chat history */
+    #chatbox {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      font-size: 1em;
+    }
+
+    /* Message bubbles */
+    .user {
+      align-self: flex-end;
+      background: #0078d4;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 16px 16px 0 16px;
+      margin: 6px 0;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .agent {
+      align-self: flex-start;
+      background: #f0f0f0;
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 16px 16px 16px 0;
+      margin: 6px 0;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    /* Controls pinned at bottom */
+    #controls {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: #fafafa;
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      margin-right: 8px;
+    }
+
+    #send {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      font-size: 1em;
+      border: none;
+      border-radius: 20px;
+      background: #0078d4;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #send:hover {
+      background: #005a9e;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 600px) {
+      #chat-widget {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+      }
+
+      #input, #send {
+        font-size: 0.95em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-widget">
+    <!-- Chat history -->
+    <div id="chatbox">
+      <div class="agent" id="welcome">👋 Hi there! How can I help you today?</div>
+    </div>
+
+    <!-- Controls pinned at bottom -->
+    <div id="controls">
+      <input id="input" type="text" placeholder="Type your message..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <!-- Tenant‑aware JS -->
+  <script src="/static/widget.js" defer></script>
+</body>
+</html>
+
+
+
+
+<!-- <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tenant Chat Widget</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
@@ -84,4 +215,4 @@
   <!-- ✅ Load tenant‑aware JS -->
   <script src="/static/widget.js" defer></script>
 </body>
-</html>
+</html> -->

@@ -9,10 +9,54 @@
     <h2>Embed Chat Widget</h2>
     <pre>
         <iframe 
-            src="http://127.0.0.1:8000/chat/history?tenant_id={{ tenant_id }}"
-            width="400" 
-            height="600" 
-            style="border:none;">
+            <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: hidden; /* prevent outer scroll */
+            }
+
+            .chat-embed {
+                width: 100%;
+                max-width: 600px;
+                height: 100vh;
+                margin: 0 auto;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+
+            .chat-embed iframe {
+                display: block;
+                width: 100%;
+                height: 100%;
+                border: 0;
+                border-radius: 8px;
+            }
+
+            @media (max-width: 1024px) {
+                .chat-embed {
+                height: 100vh;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .chat-embed {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                }
+            }
+            </style>
+
+            <div class="chat-embed">
+            <iframe 
+                src="https://app.zenai.co.in/widget?org_id=1&welcome=👋+Welcome+to+ZenAI+Support!"
+                allow="clipboard-read; clipboard-write; microphone; camera"
+                scrolling="no">
+            </iframe>
+            </div>
+
         </iframe>
     </pre>
 

@@ -100,6 +100,8 @@ async def run_agent_task(
 
 # --- Example Usage for a Business Owner ---
 async def example():
+    org_id =1
+    message = "Have a great day"
     result = await run_agent_task(
         business_tenant_id=str(org_id), # force string
         org_id=str(org_id), # force string
